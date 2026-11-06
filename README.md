@@ -10,6 +10,44 @@
 
 **第一階段僅提供一個 Workflow Skill**，協調 GitHub Issue → OpenSpec → ADR Gate → Coding / Tests → PR。Skill 已提交，但**尚未在使用者環境實際安裝或測試**；OpenSpec / ADR Tools / GitHub Actions 也尚未在產品專案中導入。決策需人工核准，合併／部署亦不能由 Agent 擅自執行。
 
+## Skill 安裝方式（Codex / Claude Code）
+
+> 需求：Node.js 22.20+、npm / npx。以下請在**要開發的產品 Repository 根目錄**執行；預設安裝於目前專案，不是全域安裝。
+
+### 1. 推薦：使用 Skills CLI
+
+先確認此 Repo 提供的 Skill：
+
+```bash
+npx skills add appletiger0704/agent-coding-lifecycle --list
+```
+
+同時安裝給 Codex 與 Claude Code：
+
+```bash
+npx skills add appletiger0704/agent-coding-lifecycle --skill agent-coding-lifecycle -a codex -a claude-code
+```
+
+安裝時確認選擇 **Project** scope；如需將檔案獨立複製到 Agent 目錄，可加 `--copy`。預期可由 `.agents/skills/`、`.claude/skills/` 存取該 Skill，具體形式可能是目錄或符號連結。
+
+### 2. 驗證與更新
+
+```bash
+npx skills list
+npx skills check
+npx skills update agent-coding-lifecycle
+```
+
+也可以在安裝完成後，於 Codex 呼叫 `$agent-coding-lifecycle`，或在 Claude Code 呼叫 `/agent-coding-lifecycle`，確認 Skill 能被載入。**目前尚未在使用者的本機實測這些命令。**
+
+### 3. 手動安裝（不使用 Skills CLI）
+
+可依 [MVP 文件的手動複製步驟](docs/mvp.md#安裝到產品-repository手動可重現)，將 `skills/agent-coding-lifecycle/` 複製到產品 Repo 的 `.agents/skills/` 與 `.claude/skills/`。
+
+> 此 Skill **只協調流程**，不會自動安裝 OpenSpec、建立 ADR Tools、合併 PR 或部署程式。正式使用前，請先檢視 [SKILL.md](skills/agent-coding-lifecycle/SKILL.md) 內容及所需權限。
+
+CLI 參考：[vercel-labs/skills 安裝文件](https://github.com/vercel-labs/skills/blob/main/docs/commands.md)。
+
 ## 目的
 
 打造能在不同 AI Coding Agents 間交接的工程流程，從需求、規格、架構決策、實作、測試到審查都有版本控制與可回溯證據。此 Repository 是**共用方法、研究與模板的中央知識庫**，不是單一產品的程式碼 Repository。
