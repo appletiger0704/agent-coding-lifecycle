@@ -1,4 +1,4 @@
-# Agent Coding Lifecycle Skill — MVP v0.1
+# Agent Coding Lifecycle Skill — MVP（v0.1 基礎流程 + v0.2 子命令）
 
 > **狀態：MVP 已建立、待 Codex / Claude Code 實測**；追蹤：[Issue #6](https://github.com/appletiger0704/agent-coding-lifecycle/issues/6)。不代表 OpenSpec 或 ADR 已正式選型通過。
 
@@ -11,6 +11,36 @@
 - **不自動合併／部署**；不安裝全套管理工具。
 - **支援接續進行中的工作**，不要求每次從零建立 Issue。
 - 細微修改可採輕量流程，不必硬建所有文件。
+
+## v0.2：依需求呼叫子命令
+
+主 Skill 維持單一入口：`skills/agent-coding-lifecycle/SKILL.md`。細節保留在 `skills/agent-coding-lifecycle/references/commands.md`，讓使用者只載入選取的命令。
+
+| 功能 | Codex | Claude Code（安裝額外 wrapper 後） |
+|---|---|---|
+| 使用說明 | `$agent-coding-lifecycle help` | `/agent-coding-lifecycle:help` |
+| 工作進度 | `$agent-coding-lifecycle status` | `/agent-coding-lifecycle:status` |
+| GitHub Issue | `$agent-coding-lifecycle issue` | `/agent-coding-lifecycle:issue` |
+| OpenSpec | `$agent-coding-lifecycle openspec` | `/agent-coding-lifecycle:openspec` |
+| ADR | `$agent-coding-lifecycle adr` | `/agent-coding-lifecycle:adr` |
+| Coding | `$agent-coding-lifecycle implement` | `/agent-coding-lifecycle:implement` |
+| PR | `$agent-coding-lifecycle pr` | `/agent-coding-lifecycle:pr` |
+| 完成 | `$agent-coding-lifecycle close` | `/agent-coding-lifecycle:close` |
+| 自動接續 | `$agent-coding-lifecycle run` | `/agent-coding-lifecycle:run` |
+
+原本的 Claude Code `/agent-coding-lifecycle <子命令>` 呼叫方式仍可使用，但冒號形式**不是單靠安裝 SKILL.md 就會出現**。
+
+## 完整命名空間安裝
+
+從本 Repo clone 的來源目錄執行以下指令，將主 Skill 與 Claude Code 的 9 個命令檔複製到產品專案：
+
+```bash
+bash scripts/install.sh /path/to/product-repo
+```
+
+預設會跳過已存在檔案。核對更新內容後，可加 `--force` 覆寫受管理檔案。
+
+注意：`npx skills add` 僅安裝 Skill，不包含本 Repo `.claude/commands/` 的命令檔。若不需要冒號形式，沿用原本的 `npx skills add` 即可。
 
 ## Skill 原始碼
 
