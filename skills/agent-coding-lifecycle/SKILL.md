@@ -29,7 +29,7 @@ One shared skill, multiple **on-demand commands**. Do not execute the full lifec
 | `close` | After confirmed merge, archive and update status when authorized. |
 | `run` | Inspect existing progress and continue **only the next unfinished step**. |
 
-For `help`, respond from the table above. For other commands, read **only the matching section** of [references/commands.md](references/commands.md), plus pertinent repository evidence. Do not read all related ADRs or specifications indiscriminately.
+For `help`, show: (1) the six-stage standard sequence `issue → openspec → adr gate → implement → pr → close`, (2) `status` as read-only inspection, (3) `run` as one-step resume, and (4) an ADR check does not always produce a new ADR. If ADR approval changes design, revisit OpenSpec before implementation. For other commands, read **only the matching section** of [references/commands.md](references/commands.md), plus pertinent repository evidence. Do not read all related ADRs or specifications indiscriminately.
 
 ## Always enforce
 
