@@ -2,11 +2,11 @@
 
 > **Status: Proposal / Research** · 研究 Codex、Claude Code 與可追溯的軟體開發流程。**尚未宣告任何架構已核准。**
 
-## MVP v0.1 — 單一 Orchestrator Skill（已建立，待實測）
+## MVP — 單一 Orchestrator Skill（已建立，待實測）
 
 - [Skill 原始碼：`skills/agent-coding-lifecycle/SKILL.md`](skills/agent-coding-lifecycle/SKILL.md)
 - [MVP 安裝與手動驗收說明](docs/mvp.md)
-- [Issue #6：MVP 試跑與後續迭代](https://github.com/appletiger0704/agent-coding-lifecycle/issues/6)
+- [Issue #6：MVP 試跑](https://github.com/appletiger0704/agent-coding-lifecycle/issues/6) · [Issue #7：子命令擴充](https://github.com/appletiger0704/agent-coding-lifecycle/issues/7)
 
 **第一階段僅提供一個 Workflow Skill**，協調 GitHub Issue → OpenSpec → ADR Gate → Coding / Tests → PR。Skill 已提交，但**尚未在使用者環境實際安裝或測試**；OpenSpec / ADR Tools / GitHub Actions 也尚未在產品專案中導入。決策需人工核准，合併／部署亦不能由 Agent 擅自執行。
 
@@ -47,6 +47,54 @@ npx skills update agent-coding-lifecycle
 > 此 Skill **只協調流程**，不會自動安裝 OpenSpec、建立 ADR Tools、合併 PR 或部署程式。正式使用前，請先檢視 [SKILL.md](skills/agent-coding-lifecycle/SKILL.md) 內容及所需權限。
 
 CLI 參考：[vercel-labs/skills 安裝文件](https://github.com/vercel-labs/skills/blob/main/docs/commands.md)。
+
+## 指令式工作流（MVP v0.2）
+
+這仍是**一個 Skill**；以子命令路由到需要的功能，不會每次強迫讀取所有 OpenSpec / ADR 文件。主 Skill 請見 [`SKILL.md`](skills/agent-coding-lifecycle/SKILL.md)，各命令細節見 [`references/commands.md`](skills/agent-coding-lifecycle/references/commands.md)。
+
+| 子命令 | 作用 |
+|---|---|
+| `help` | 顯示 Skill 目標、命令與建議流程 |
+| `status` | 只讀目前工作階段與阻礙 |
+| `issue` | 整理 GitHub Issue |
+| `openspec` | 呼叫專案已安裝的 OpenSpec |
+| `adr` | 檢查 / 提出架構決策（人工核准） |
+| `implement` | 實作與測試 |
+| `pr` | 審查並準備 PR |
+| `close` | 合併後歸檔並更新追蹤狀態 |
+| `run` | 判斷下一個尚未完成的階段 |
+
+**Codex** 使用 Skill 名稱加參數，例如：
+
+```text
+$agent-coding-lifecycle help
+$agent-coding-lifecycle openspec issue-123
+$agent-coding-lifecycle adr 評估是否需要採用 Kafka
+```
+
+**Claude Code** 可使用參數形式 `/agent-coding-lifecycle help`，或安裝 **額外命名空間命令**後使用：
+
+```text
+/agent-coding-lifecycle:help
+/agent-coding-lifecycle:status
+/agent-coding-lifecycle:openspec issue-123
+/agent-coding-lifecycle:adr 評估是否需要採用 Kafka
+```
+
+> **重要：** `npx skills add` 僅安裝主 Skill，**不會自動安裝**本 Repo 的 `.claude/commands/`。若要使用冒號形式，請採下方完整安裝方式。
+
+### 完整安裝（含 Claude Code 冒號命令）
+
+在工作機器執行，將 `<product-repo>` 換成要使用 Skill 的專案路徑：
+
+```bash
+git clone https://github.com/appletiger0704/agent-coding-lifecycle.git
+bash agent-coding-lifecycle/scripts/install.sh /path/to/product-repo
+```
+
+此安裝腳本會**複製**主 Skill 到 `.agents/skills/` 與 `.claude/skills/`，並將 9 個 Claude Code 命名空間命令安裝於 `.claude/commands/agent-coding-lifecycle/`。遇到已存在的檔案預設跳過；更新時可先檢查差異，再用 `--force` 覆寫這些受管理檔案。
+
+請確認目標專案的變更後再提交 Git。腳本不會安裝 OpenSpec、ADR Tools，亦不會建立 GitHub Issues/PR。**Claude Code / Codex 的實際呼叫尚待使用者環境驗證。**
 
 ## 目的
 
@@ -96,6 +144,8 @@ GitHub Issue
 - [#3 ADR Skills / MADR / ADR Tools](https://github.com/appletiger0704/agent-coding-lifecycle/issues/3)
 - [#4 Codex / Claude Code 共用規範](https://github.com/appletiger0704/agent-coding-lifecycle/issues/4)
 - [#5 GitHub Projects / Actions](https://github.com/appletiger0704/agent-coding-lifecycle/issues/5)
+- [#6 MVP Orchestrator Skill](https://github.com/appletiger0704/agent-coding-lifecycle/issues/6)
+- [#7 子命令擴充](https://github.com/appletiger0704/agent-coding-lifecycle/issues/7)
 
 ## 中央與各專案的權責
 
