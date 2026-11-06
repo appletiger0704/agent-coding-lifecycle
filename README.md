@@ -45,11 +45,11 @@ GitHub Issue
 
 ## 待辦 Issues
 
-- [#1 總體規劃](../../issues/1)
-- [#2 OpenSpec](../../issues/2)
-- [#3 ADR Skills / MADR / ADR Tools](../../issues/3)
-- [#4 Codex / Claude Code 共用規範](../../issues/4)
-- [#5 GitHub Projects / Actions](../../issues/5)
+- [#1 總體規劃](https://github.com/appletiger0704/agent-coding-lifecycle/issues/1)
+- [#2 OpenSpec](https://github.com/appletiger0704/agent-coding-lifecycle/issues/2)
+- [#3 ADR Skills / MADR / ADR Tools](https://github.com/appletiger0704/agent-coding-lifecycle/issues/3)
+- [#4 Codex / Claude Code 共用規範](https://github.com/appletiger0704/agent-coding-lifecycle/issues/4)
+- [#5 GitHub Projects / Actions](https://github.com/appletiger0704/agent-coding-lifecycle/issues/5)
 
 ## 中央與各專案的權責
 
