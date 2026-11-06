@@ -1,83 +1,44 @@
 ---
 name: agent-coding-lifecycle
-description: Coordinate software changes across GitHub Issues, OpenSpec, existing architecture decision records (ADRs), implementation, tests, and pull requests. Use when starting, resuming, or reviewing a feature or significant code change with Codex or Claude Code. Do not invoke for general questions, trivial one-line edits, or work without a repository.
+description: Route GitHub Issue, OpenSpec, ADR, coding, and PR tasks for Codex or Claude Code. Invoke with help, status, issue, openspec, adr, implement, pr, close, or run. Use for starting or resuming a repository development task; skip for trivial edits and general questions.
 ---
 
-# Agent Coding Lifecycle — MVP v0.1
+# Agent Coding Lifecycle — Command Router (MVP)
 
-Act as a **workflow coordinator**, not a replacement for GitHub, OpenSpec, an ADR skill, test tools, or a human reviewer. Follow this process only to the extent needed for the current task.
+One shared skill, multiple **on-demand commands**. Do not execute the full lifecycle when only one command was requested.
 
-## 0. Resume and assess
+## Invoke
 
-1. Read project-level instructions (`AGENTS.md`, `CLAUDE.md`, or equivalent), then inspect the relevant repository.
-2. Identify the Issue/request, current branch and PR (if any), existing OpenSpec change, relevant ADRs, and completed tasks.
-3. Determine the **next unfinished step**. Do not recreate issues, specs, ADRs, branches, or PRs that already exist.
-4. Check what CLI, integrations, and permissions are actually available; do not imply an operation succeeded without checking.
-5. For small fixes that follow established patterns, prefer a lightweight Issue → implementation → tests → PR flow; do not force a large specification or ADR.
+- Codex: `$agent-coding-lifecycle <command> [details]`
+- Claude Code: `/agent-coding-lifecycle <command> [details]`
+- Optional Claude namespaced wrappers: `/agent-coding-lifecycle:<command> [details]` (require separate command installation).
+- User arguments in Claude Code: $ARGUMENTS
+- If no command is given, use `run`. If the command is unknown, display `help` instead of taking action.
 
-## 1. Intake — GitHub Issue
+## Commands
 
-- Reuse the existing Issue if one exists. Capture the objective, scope, acceptance criteria, and relevant constraints.
-- If GitHub access is unavailable, work from a supplied issue description; report missing links explicitly instead of inventing them.
-- Create or update remote Issues only when the request authorizes that change.
+| Command | Outcome |
+|---|---|
+| `help` | List purpose, commands, and the recommended Issue → OpenSpec → ADR → Code → PR flow. No repository scan. |
+| `status` | Read-only stage and blockers, without changing files or GitHub. |
+| `issue` | Inspect, draft, or (when authorized) create/update an Issue. |
+| `openspec` | Use the project's existing OpenSpec workflow, if installed. |
+| `adr` | Check relevant accepted decisions; propose an ADR only for significant architecture changes. |
+| `implement` | Implement an approved scope and run relevant tests. |
+| `pr` | Summarize/review changes and prepare or (when authorized) create a PR. |
+| `close` | After confirmed merge, archive and update status when authorized. |
+| `run` | Inspect existing progress and continue **only the next unfinished step**. |
 
-## 2. Plan — OpenSpec
+For `help`, respond from the table above. For other commands, read **only the matching section** of [references/commands.md](references/commands.md), plus pertinent repository evidence. Do not read all related ADRs or specifications indiscriminately.
 
-- Reuse the repository's **existing** OpenSpec change and conventions first.
-- When OpenSpec is installed and the change warrants specifications, use its maintained workflow, not a new homemade specification format. The current core workflow provides explore (optional), propose, apply, sync/update, and archive. Check the installed version for exact commands and behavior.
-- Prefer proposal/specs/design/tasks for meaningful feature changes; avoid duplicate prose between Issue, OpenSpec, and ADR.
-- If OpenSpec is absent, **do not silently install or initialize it**. Follow project instructions or present the needed setup as a separate task.
+## Always enforce
 
-## 3. Decision gate — ADR
+1. Reuse current Issues, changes, ADRs, branches, and PRs; do not recreate existing work.
+2. OpenSpec, ADR skills, and GitHub tooling remain the owners of their respective operations. Never claim an uninstalled tool was invoked.
+3. Read relevant **Accepted** ADRs before architectural implementation. Significant changes require a **Proposed** ADR and explicit human acceptance first. Never self-accept or silently override an Accepted ADR.
+4. Never self-approve, merge, release, deploy, or change remote data without appropriate authorization. Report unavailable permissions/tools and unrun tests.
+5. Keep simple changes lightweight; do not mandate a full OpenSpec change or ADR for routine bug fixes.
 
-- Search the product repository's ADR directory (e.g. `docs/adr/`) and read relevant **Accepted** records *before implementation*.
-- Propose an ADR if the choice is significant: changes long-lived architecture, security boundaries, data contracts, major dependencies or infrastructure, affects several components, or is costly to reverse.
-- If needed, write a **Proposed** ADR using the repository's template and link it to Issue and OpenSpec.
-- **Never approve an ADR or change its status to Accepted autonomously.** Wait for explicit human approval before implementing the architecture-sensitive choice.
-- If the request conflicts with an Accepted ADR, report the conflict and propose a superseding ADR; do not silently disregard the decision.
-- Do not create an ADR for routine fixes, formatting, small refactors, or decisions already covered by existing records.
+## Handoff
 
-## 4. Implement and verify
-
-- Follow the relevant OpenSpec tasks or the Issue acceptance criteria and Accepted ADR constraints.
-- Implement in reviewable increments. Run applicable tests and checks when executable in the environment; record actual results, including failures and any checks not run.
-- If a substantial design change emerges, return to the decision gate before continuing the affected work.
-- Do not claim test success, deployed state, or tool execution without evidence.
-
-## 5. Review — PR
-
-- Prepare a PR or PR description that includes:
-  - GitHub Issue link or identifier;
-  - OpenSpec change path (or `N/A`);
-  - relevant Accepted ADR / Proposed ADR status (or `N/A`);
-  - implementation summary, test commands/results, known risks and remaining work.
-- Create a remote PR only when authorized and supported by available tooling.
-- **Do not self-approve, merge, release, or deploy** without explicit authorization and the repository's required checks/review.
-
-## 6. Close — only after actual merge
-
-- After confirmed merge, follow the installed OpenSpec procedure for syncing/archiving a completed change, where appropriate.
-- Update Issue/Project status only with authorization and after verifying the relevant outcome.
-- Do not treat a submitted PR as completed implementation.
-
-## Response contract
-
-At each handoff, report succinctly:
-
-- **Stage:** Intake / Plan / ADR Gate / Implement / Review / Close
-- **Issue:** link or missing
-- **OpenSpec:** path / N/A / pending
-- **ADR:** Accepted reference / Proposed pending review / N/A
-- **Tests:** passed, failed, not run, or pending (with evidence)
-- **PR:** link / not created
-- **Next:** one concrete next step and any human approval blocker
-
-## Non-goals for v0.1
-
-No automated GitHub Projects board, CI enforcement, ADR CLI, model-specific sub-agent delegation, deployment automation, or new MCP server. These are later enhancements, not prerequisites.
-
-## Reference
-
-See the central project policy and MVP trial plan:
-- https://github.com/appletiger0704/agent-coding-lifecycle/blob/main/docs/architecture/lifecycle.md
-- https://github.com/appletiger0704/agent-coding-lifecycle/blob/main/docs/mvp.md
+For commands other than `help`, keep the result brief: **stage**, relevant **Issue / OpenSpec / ADR / PR**, **tests** (actual result or not run), **blocker**, and **next action**. Omit irrelevant fields instead of filling the response with `N/A`.
