@@ -1,6 +1,6 @@
 # GitHub Issues / Projects / Actions — 整合提案
 
-> 狀態：Research；關聯 [Issue #5](../../issues/5)、[總體 Issue #1](../../issues/1)。
+> 狀態：Research；關聯 [Issue #5](https://github.com/appletiger0704/agent-coding-lifecycle/issues/5)、[總體 Issue #1](https://github.com/appletiger0704/agent-coding-lifecycle/issues/1)。
 
 ## 職責
 
