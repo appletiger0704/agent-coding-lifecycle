@@ -18,6 +18,12 @@ Goal: Make Codex and Claude Code development repeatable and traceable, with GitH
 | `/agent-coding-lifecycle:close` | Archive after merge |
 | `/agent-coding-lifecycle:run` | Continue the next unfinished step |
 
-Suggested flow: **Issue → OpenSpec → ADR decision gate (only when needed) → Code + Tests → PR → Merge → Archive**.
+**Standard six steps:** `issue → openspec → adr → implement → pr → close` (merge must be verified before `close`).
+
+**First-time use:** `help` for instructions, then `status` to inspect progress.
+
+**Resume:** `status → run` selects only the next unfinished step. `run` does not automatically authorize changes, merging, or deployment.
+
+At `adr`, check existing Accepted ADRs every time architecture is affected; create a new Proposed ADR only for significant decisions. After approval, return to `openspec` if Design / Tasks need updates.
 
 Only significant architecture choices need a new ADR, and human approval is required before treating one as Accepted. This help command must not read or modify the repository, invoke external tools, or start coding.
