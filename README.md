@@ -64,6 +64,27 @@ CLI 參考：[vercel-labs/skills 安裝文件](https://github.com/vercel-labs/sk
 | `close` | 合併後歸檔並更新追蹤狀態 |
 | `run` | 判斷下一個尚未完成的階段 |
 
+### 建議執行順序（從新需求開始）
+
+**不需要每次都執行 9 個指令。** `help` 是使用說明、`status` 是只讀進度盤點，`run` 是「繼續下一個未完成階段」的快捷入口；真正的開發階段是以下六步：
+
+| 順序 | 指令 | 完成條件 |
+|---|---|---|
+| 1 | `issue` | 已有清楚的需求、範圍與驗收條件（可沿用既有 Issue） |
+| 2 | `openspec` | 有足以評估架構的 Proposal / Specs / 初步 Design / Tasks（依變更規模調整） |
+| 3 | `adr` | 檢查相關 Accepted ADR；如需重大新決策，先提出 Proposed、等待人工核准 |
+| 4 | `implement` | 依核准設計實作並執行適當測試 |
+| 5 | `pr` | 提交變更與測試證據，接受審查 |
+| 6 | `close` | **確認 PR 已合併**，才歸檔 OpenSpec 並更新 Issue / Project |
+
+- **先看有什麼：** `help`（不用讀專案）→ `status`（只讀）→ 選上述六步的下一步。
+- **想省操作：** `status` → `run`。每次 `run` 只選下一個未完成階段；不是無條件自動執行到合併或部署。
+- **ADR 無重大新決策：** 檢查完成就繼續，**不用建立 ADR 文件**。
+- **ADR 改變既有設計：** 先回到 `openspec` 更新 Design / Tasks，再進入 `implement`。
+- **小型 bugfix：** 可以採 Issue → Implement → PR 的精簡路徑，不強制新增 OpenSpec／ADR。
+
+OpenSpec 的底層操作由已安裝的 OpenSpec Skills 負責，通常可對應 `explore`（可選）、`propose`、`apply`、`archive`；本 Skill 不重造它們的指令或自動跳過人工審核。
+
 **Codex** 使用 Skill 名稱加參數，例如：
 
 ```text
