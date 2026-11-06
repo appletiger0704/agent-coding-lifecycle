@@ -42,6 +42,19 @@ bash scripts/install.sh /path/to/product-repo
 
 注意：`npx skills add` 僅安裝 Skill，不包含本 Repo `.claude/commands/` 的命令檔。若不需要冒號形式，沿用原本的 `npx skills add` 即可。
 
+## 正常執行順序
+
+首次使用：`help`（說明）→ `status`（只讀進度），之後選擇六階段：
+
+1. `issue`：確認目標與驗收條件
+2. `openspec`：整理提案／規格／設計／Tasks
+3. `adr`：讀取相關 Accepted ADR，必要時提 Proposed 並由人員批准
+4. `implement`：開發與測試
+5. `pr`：提交 PR 與驗證證據，等待審查
+6. `close`：確認合併後歸檔、更新追蹤
+
+接續工作：`status` → `run`（僅下一個未完成階段）。`adr` 並非每次都建立新紀錄；如 ADR 影響設計，回到 `openspec` 修正後再實作。日常小修可略過不必要的 OpenSpec 或新 ADR。
+
 ## Skill 原始碼
 
 [`skills/agent-coding-lifecycle/SKILL.md`](../skills/agent-coding-lifecycle/SKILL.md)
