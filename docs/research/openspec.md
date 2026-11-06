@@ -1,6 +1,6 @@
 # OpenSpec — 研究與導入策略
 
-> 狀態：Research；關聯 [Issue #2](../../issues/2)、[總體 Issue #1](../../issues/1)。
+> 狀態：Research；關聯 [Issue #2](https://github.com/appletiger0704/agent-coding-lifecycle/issues/2)、[總體 Issue #1](https://github.com/appletiger0704/agent-coding-lifecycle/issues/1)。
 
 ## 定位
 
