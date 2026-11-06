@@ -21,6 +21,7 @@ This file supplements `SKILL.md`. Never treat a subcommand as authorization to r
 - Never invent a shell command or claim invocation of a missing OpenSpec tool.
 - If missing or unconfigured, provide concrete setup prerequisites and stop short of installation unless explicitly authorized.
 - Don't regenerate an existing change or treat OpenSpec `design` as a replacement for accepted architecture decisions.
+- After a major ADR is accepted, revisit the OpenSpec design/tasks if the approved decision changes the plan; do this before implementation.
 
 ## adr
 
