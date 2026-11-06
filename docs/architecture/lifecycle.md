@@ -1,6 +1,6 @@
 # Agent Coding Lifecycle — 流程與治理（Proposal）
 
-> 狀態：Proposed（尚未核准）。關聯 Issue：[總體規劃 #1](../../issues/1)。
+> 狀態：Proposed（尚未核准）。關聯 Issue：[總體規劃 #1](https://github.com/appletiger0704/agent-coding-lifecycle/issues/1)。
 
 ## 1. 目標
 
