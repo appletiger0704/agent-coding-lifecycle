@@ -1,116 +1,96 @@
-# Agent Coding Lifecycle Skill — MVP（v0.1 基礎流程 + v0.2 子命令）
+# MVP 指南 — Agent Coding Lifecycle
 
-> **狀態：MVP 已建立、待 Codex / Claude Code 實測**；追蹤：[Issue #6](https://github.com/appletiger0704/agent-coding-lifecycle/issues/6)。不代表 OpenSpec 或 ADR 已正式選型通過。
+> 版本：v0.2（單一 Skill + 子命令）。**命令檔已在 GitHub；Codex / Claude Code 實機驗證待完成。**  
+> 追蹤：[Issue #6](https://github.com/appletiger0704/agent-coding-lifecycle/issues/6) / [Issue #7](https://github.com/appletiger0704/agent-coding-lifecycle/issues/7)
 
-## MVP 範圍
+## 目標
 
-一個 `agent-coding-lifecycle` 協調 Skill，根據 Repository 現況決定下一個動作：Issue → OpenSpec → ADR Gate → Coding + Tests → PR → Merge 後歸檔。
+透過一個 `agent-coding-lifecycle` Skill，協調 GitHub Issue → OpenSpec → ADR（必要時）→ Implementation / Tests → PR → Merge 後歸檔。
 
-- **不取代**原生 OpenSpec Skills 或 GitHub。
-- **不自動核准 ADR**；若是重大架構決策，只提出 Proposed，等待人工核准。
-- **不自動合併／部署**；不安裝全套管理工具。
-- **支援接續進行中的工作**，不要求每次從零建立 Issue。
-- 細微修改可採輕量流程，不必硬建所有文件。
+重點是讓 Codex / Claude Code **從文件恢復開發進度**，不靠對話歷史。這是協調 Skill，不會自行安裝 OpenSpec、操作未授權的遠端資源或取代人員的架構審核。
 
-## v0.2：依需求呼叫子命令
+## 安裝
 
-主 Skill 維持單一入口：`skills/agent-coding-lifecycle/SKILL.md`。細節保留在 `skills/agent-coding-lifecycle/references/commands.md`，讓使用者只載入選取的命令。
+### 使用 Skills CLI（主 Skill）
 
-| 功能 | Codex | Claude Code（安裝額外 wrapper 後） |
-|---|---|---|
-| 使用說明 | `$agent-coding-lifecycle help` | `/agent-coding-lifecycle:help` |
-| 工作進度 | `$agent-coding-lifecycle status` | `/agent-coding-lifecycle:status` |
-| GitHub Issue | `$agent-coding-lifecycle issue` | `/agent-coding-lifecycle:issue` |
-| OpenSpec | `$agent-coding-lifecycle openspec` | `/agent-coding-lifecycle:openspec` |
-| ADR | `$agent-coding-lifecycle adr` | `/agent-coding-lifecycle:adr` |
-| Coding | `$agent-coding-lifecycle implement` | `/agent-coding-lifecycle:implement` |
-| PR | `$agent-coding-lifecycle pr` | `/agent-coding-lifecycle:pr` |
-| 完成 | `$agent-coding-lifecycle close` | `/agent-coding-lifecycle:close` |
-| 自動接續 | `$agent-coding-lifecycle run` | `/agent-coding-lifecycle:run` |
-
-原本的 Claude Code `/agent-coding-lifecycle <子命令>` 呼叫方式仍可使用，但冒號形式**不是單靠安裝 SKILL.md 就會出現**。
-
-## 完整命名空間安裝
-
-從本 Repo clone 的來源目錄執行以下指令，將主 Skill 與 Claude Code 的 9 個命令檔複製到產品專案：
+於產品 Repo 根目錄：
 
 ```bash
-bash scripts/install.sh /path/to/product-repo
+npx skills add appletiger0704/agent-coding-lifecycle --skill agent-coding-lifecycle -a codex -a claude-code
 ```
 
-預設會跳過已存在檔案。核對更新內容後，可加 `--force` 覆寫受管理檔案。
-
-注意：`npx skills add` 僅安裝 Skill，不包含本 Repo `.claude/commands/` 的命令檔。若不需要冒號形式，沿用原本的 `npx skills add` 即可。
-
-## 正常執行順序
-
-首次使用：`help`（說明）→ `status`（只讀進度），之後選擇六階段：
-
-1. `issue`：確認目標與驗收條件
-2. `openspec`：整理提案／規格／設計／Tasks
-3. `adr`：讀取相關 Accepted ADR，必要時提 Proposed 並由人員批准
-4. `implement`：開發與測試
-5. `pr`：提交 PR 與驗證證據，等待審查
-6. `close`：確認合併後歸檔、更新追蹤
-
-接續工作：`status` → `run`（僅下一個未完成階段）。`adr` 並非每次都建立新紀錄；如 ADR 影響設計，回到 `openspec` 修正後再實作。日常小修可略過不必要的 OpenSpec 或新 ADR。
-
-## Skill 原始碼
-
-[`skills/agent-coding-lifecycle/SKILL.md`](../skills/agent-coding-lifecycle/SKILL.md)
-
-這是中央 Repository 的**單一維護來源**，不是每個產品 Repo 直接自動發現的路徑。
-
-## 安裝到產品 Repository（手動、可重現）
-
-在自己的工作環境中執行以下範例，請依實際路徑調整：
+### 完整安裝（含 Claude Code 的冒號指令）
 
 ```bash
 git clone https://github.com/appletiger0704/agent-coding-lifecycle.git
-cd /path/to/your-product-repo
-mkdir -p .agents/skills .claude/skills
-cp -R /path/to/agent-coding-lifecycle/skills/agent-coding-lifecycle .agents/skills/
-cp -R /path/to/agent-coding-lifecycle/skills/agent-coding-lifecycle .claude/skills/
+bash agent-coding-lifecycle/scripts/install.sh /path/to/your-product-repo
 ```
 
-- Codex：`.agents/skills/agent-coding-lifecycle/SKILL.md`
-- Claude Code：`.claude/skills/agent-coding-lifecycle/SKILL.md`
-- 建議將選定版本提交到產品 Repo，讓跨 Agent 協作使用相同規則。更新時明確同步並接受 code review。
-- 若已在產品 Repo 安裝 OpenSpec，保留 OpenSpec 本身產生的 skills/commands；本 Skill 只負責協調。
-- 若未安裝 OpenSpec，Skill 不能代替安裝與初始化。
+腳本複製 Skill 與其 `references/` 到：
 
-## 典型呼叫（安裝完成後）
+- `.agents/skills/agent-coding-lifecycle/`（Codex）
+- `.claude/skills/agent-coding-lifecycle/`（Claude Code）
+- `.claude/commands/agent-coding-lifecycle/`（Claude Code 的 9 個冒號命令）
 
-Codex：`$agent-coding-lifecycle 請從 Issue #123 開始，先確認目前階段與相關 ADR`
+腳本預設保留既有檔案，確認更新內容後才使用 `--force`。直接用 Skills CLI 安裝不會順帶提供命名空間命令。
 
-Claude Code：`/agent-coding-lifecycle 請接續 Issue #123，確認規格與測試狀態`
+## 指令與正確順序
 
-上述只是**預期用法**，仍須在實際 Codex / Claude Code 版本中確認能被載入。完成安裝但未出現時，請參考各 Agent 官方的 Skill discovery 說明。
+| 階段 | 子命令 | 判斷與輸出 |
+|---|---|---|
+| 使用前 | `help` | 查詢有哪些命令，不掃描專案 |
+| 接續前 | `status` | 唯讀查詢完成度與下一步 |
+| 1 | `issue` | 需求與驗收條件明確 |
+| 2 | `openspec` | 規格、初步設計、工作拆分 |
+| 3 | `adr` | 檢查 Accepted ADR；重大新決策須 Proposed → 人工核准 |
+| 4 | `implement` | 依已核准規格實作與測試 |
+| 5 | `pr` | 準備提交審核與測試紀錄 |
+| 6 | `close` | **確認 PR 合併**後才歸檔／結案 |
+| 快捷 | `run` | 從現況選**下一個未完成階段**，不是全流程自動執行 |
 
-## 手動試跑清單
+新需求：`issue → openspec → adr gate → implement → pr → close`。  
+接續工作：`status → run`。  
+小型 bugfix：可走簡化 Issue → Implement → PR → Close，不必強制建立 OpenSpec 變更或新 ADR。
 
-**案例 A：既有模式下的小型功能**
+若 ADR 核准結果改變技術設計，先回到 OpenSpec 修正 Design / Tasks。沒有重要新決策時，`adr` 只讀既有紀錄，不建立新 ADR。
 
-- [ ] Agent 能讀取指定 Issue 並判斷已有工作，不重複開單。
-- [ ] 不涉及重大選型時，不強制建立 ADR。
-- [ ] 按 spec/tasks 或 Issue 驗收條件執行實作與測試。
-- [ ] 在 PR 描述明列 Issue、Spec/ADR（可 N/A）、測試結果。
+## 指令範例
 
-**案例 B：重大架構決策**
+```text
+# Codex
+$agent-coding-lifecycle help
+$agent-coding-lifecycle status
+$agent-coding-lifecycle run 請接續 Issue #123
 
-- [ ] Agent 先閱讀 Accepted ADR。
-- [ ] 假設需要更換資料儲存、核心推論框架或認證模式，只建立 Proposed ADR。
-- [ ] 未獲人工批准時暫停相關架構變更。
-- [ ] 已核准後按決策實作，PR 可追溯到 ADR。
+# Claude Code（完整安裝後）
+/agent-coding-lifecycle:help
+/agent-coding-lifecycle:openspec issue-123
+/agent-coding-lifecycle:adr 針對資料庫選型產生 Proposed ADR
+/agent-coding-lifecycle:run 請接續 Issue #123
+```
 
-**案例 C：Agent 交接**
+## 手動驗收（尚待實測）
 
-- [ ] Codex 開始後讓 Claude Code 接續（或反過來）。
-- [ ] 第二個 Agent 能透過 GitHub / OpenSpec / ADR 恢復進度，而不是仰賴前次對話。
-- [ ] 兩個 Agent 的下一步與禁止事項一致。
+**案例 A：一般功能**
 
-## 後續迭代，暫不實作
+- [ ] Agent 可從 Issue 找到需求及既有 OpenSpec，避免重複產生。
+- [ ] 若沒有重大架構變更，不建立新 ADR。
+- [ ] 實作與測試結果可回連 PR。
 
-1. 整理試跑阻礙及 Skill 觸發問題。
-2. 必要時再拆分 `adr-review`、`pr-review`。
-3. 最後再評估 GitHub Actions / Rulesets、ADR Tools、Projects。
+**案例 B：重要架構變更**
+
+- [ ] Agent 先讀相關 Accepted ADR。
+- [ ] 提出 Proposed ADR，未批准前不繼續受影響的實作。
+- [ ] 核准後若影響設計，先回 OpenSpec 更新，再實作。
+
+**案例 C：跨 Agent 接續**
+
+- [ ] Codex 和 Claude Code 均可載入對應指令。
+- [ ] 第二個 Agent 能從 Repo 文件判斷下一個未完成階段。
+- [ ] 不會自行核准 ADR、合併或部署。
+
+## 後續（本期不做）
+
+GitHub Projects 自動化、ADR Tools、CI / Rulesets、獨立 Review Skills、MCP Server、部署自動化。先完成真實使用測試，再依 Issue 逐項改善。
+
+相關檔案：[`SKILL.md`](../skills/agent-coding-lifecycle/SKILL.md) · [命令行為](../skills/agent-coding-lifecycle/references/commands.md) · [README](../README.md)
