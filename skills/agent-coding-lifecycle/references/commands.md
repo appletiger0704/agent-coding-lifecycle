@@ -1,60 +1,65 @@
-# Command behavior — load only the selected section
+# Command behaviors — read only the requested section
 
-This file supplements `SKILL.md`. Never treat a subcommand as authorization to run every other phase.
+This file supplements `SKILL.md`. Use the routing gate first. Replace example identifiers with validated ones. **Never paste chat slash commands into a shell.**
 
 ## status
 
-- Read-only: inspect repository instructions, current branch, relevant Issue/PR, OpenSpec change, and **relevant** ADRs as available.
-- Infer the current stage and next unfinished action. Distinguish verified facts from missing access.
-- **Do not create or modify** files, issues, ADRs, or PRs.
+- Run the read-only discovery: `bash "<skill-dir>/scripts/preflight.sh" .`
+- If a specific Issue is known and `gh` is available/authenticated: `gh issue view 123 --json number,title,state,url,body`.
+- If a PR is known and `gh` is available/authenticated: `gh pr view 123 --json number,state,mergedAt,url`.
+- If `gh` is missing, use an authorized GitHub connector; otherwise state remote status was **not checked**.
+- Report current stage, existing work, approval blockers, and one next step. No writes.
 
 ## issue
 
-- Reuse an existing Issue; extract objectives, constraints, acceptance criteria, and relationships.
-- When no Issue exists, draft one from the supplied context. Only create/update it remotely when user intent authorizes the write and the GitHub tool is available.
-- Link any known OpenSpec change and ADR; do not invent issue numbers.
+- Read existing Issue first: `gh issue view 123 --json number,title,state,url,body` or an authorized GitHub connector.
+- If no issue identifier is given, `gh issue list --limit 20` may help (if available); do not substitute an invented issue number.
+- Capture objective, acceptance criteria, and relevant OpenSpec / ADR links.
+- Create/update remotely **only when authorized**. Without GitHub access, provide a draft and say it was not saved.
 
 ## openspec
 
-- Check whether OpenSpec is installed/configured in the target project. Inspect its instructions and the existing `openspec/` directory first.
-- With a supplied target change or intent, use **the OpenSpec tools/skills available in that environment** to explore, propose, apply, or archive, matching the user's requested operation.
-- Never invent a shell command or claim invocation of a missing OpenSpec tool.
-- If missing or unconfigured, provide concrete setup prerequisites and stop short of installation unless explicitly authorized.
-- Don't regenerate an existing change or treat OpenSpec `design` as a replacement for accepted architecture decisions.
-- After a major ADR is accepted, revisit the OpenSpec design/tasks if the approved decision changes the plan; do this before implementation.
+- **Gate:** Check `openspec/` and `command -v openspec` or installed Agent skills/commands. A CLI may exist while this Repo is not initialized.
+- For a known change with the CLI installed, inspect state using `openspec status --change <change-name> --json`; obtain the ID from `openspec/changes/`, never invent it.
+- Prefer the project's installed OpenSpec flow. Official core chat examples: Claude Code `/opsx:propose`, `/opsx:update`, `/opsx:apply`, `/opsx:archive`; Codex typically uses `$openspec-propose` and other installed OpenSpec skills. **These are chat/skill invocations, not shell commands.** Verify exact names/version locally.
+- Reuse existing proposal/specs/design/tasks and never overwrite silently. If a newly accepted ADR alters design, revise design/tasks before implementation.
+- If OpenSpec is absent: skip an **implicit** step. If explicitly requested, report installation/init as a prerequisite; do not auto-install.
 
 ## adr
 
-- Read only the applicable **Accepted** ADRs; check for conflicts and supersession.
-- If the work introduces significant long-term architectural tradeoffs, draft a **Proposed** ADR using the product repository's established template; link Issue and OpenSpec if known.
-- Explicit human decision is required to change an ADR to `Accepted` or approve a superseding decision. Stop architecture-sensitive implementation until approval.
-- Do not write a new ADR for ordinary bugfixes, formatting, or choices already governed by accepted decisions.
-- If the project has an installed ADR Skill, prefer its documented creation and validation process rather than replicating it here.
+- **Gate:** If no ADR directory exists, there are no existing ADR files to scan. This does not waive a major **new** architecture decision.
+- Preflight lists likely Accepted documents in common ADR directories or `.adr-dir`. Open only those relevant to the current change; verify status and supersession by reading each file.
+- For manual triage when `rg` is available: `rg -n -i 'status.*accepted|^## status$' docs/adr`; inspect candidate documents before treating them as Accepted. This is a **candidate search**, not a final status verifier.
+- Create a Proposed ADR only if changing long-lived structure, security boundaries, data contracts, major dependencies/infrastructure, cross-component patterns, or costly-to-reverse choices.
+- Follow the target Repo's ADR template/skill. Link Issue and OpenSpec, document alternatives, consequences and verification. **Human acceptance required** before architecture-sensitive implementation. Supersede rather than silently edit an Accepted decision.
+- Routine fixes or an already-approved pattern: no new ADR.
 
 ## implement
 
-- Inspect Issue acceptance criteria, relevant OpenSpec tasks, and applicable accepted ADR constraints.
-- Do not implement an architecture-sensitive choice while its ADR is Proposed.
-- Write small, reviewable changes; run relevant tests and checks. State what passed, failed, or wasn't run.
-- If a significant new design choice emerges, return to the ADR gate rather than silently committing to it.
-- Do not self-deploy, self-approve, or claim a PR was merged.
+- Read Issue acceptance criteria, relevant OpenSpec tasks (if present), and applicable Accepted ADRs; do not load all records.
+- No implementation of an architecture-sensitive Proposed ADR before human approval.
+- Review the worktree before edits: `git status --short` and `git diff --check`. Respect existing uncommitted changes.
+- Implement only the requested scope. Run the target Repo's real documented tests; record commands, passes, failures, and **not-run** checks. Never invent a test command.
+- If a significant new technical choice arises, route back to `adr`; after approval, revise OpenSpec if needed.
 
 ## pr
 
-- Inspect diff, branch, test evidence, and current PR before creating anything.
-- Present an Issue reference, OpenSpec change (if applicable), Accepted/Proposed ADR status, change summary, test commands/results, remaining risk, and review request.
-- Use an existing PR when present. Create a new remote PR only when explicitly requested or authorized, and tooling is available.
-- No self-approval, merge, release, or deployment.
+- Check changes first: `git status --short`, `git diff --check`, `git diff --stat`.
+- If `gh` exists and an existing PR may exist, inspect via `gh pr status` or `gh pr view --json number,state,url`.
+- Prepare the PR with Issue, OpenSpec change (if any), Accepted / Proposed ADR state, change summary, tests run/not run, risks, and remaining work.
+- Only create a remote PR if the user authorized it and tooling is available. Never self-approve, merge or deploy.
 
 ## close
 
-- Verify that the PR actually merged and that corresponding work is complete.
-- When the user authorizes closure, use the project's installed OpenSpec archiving approach and update linked Issue/Project status. If tools unavailable, provide accurate manual steps instead.
-- An open PR or completed coding task is **not** proof of merge; never close early.
+- **Gate:** Verify merge, not just review completion: `gh pr view 123 --json number,state,mergedAt,url` (or authoritative GitHub connector). A non-null `mergedAt` indicates merge.
+- After confirmed merge and authorization, follow installed OpenSpec archive/sync convention and update Issue/Project status.
+- If the PR is open, checks have not passed, or remote status cannot be verified, do **not** close or claim successful completion.
 
 ## run
 
-- Inspect what exists: repository instructions, Issue, branch/PR, existing OpenSpec change, applicable accepted ADR, and completed tasks.
-- Pick the **next unfinished step**; do not create redundant docs or force a full process for trivial changes.
-- If blocked by a Proposed ADR or unavailable tool/approval, explain and stop the affected operations.
-- Delegate the selected stage to the matching command section above, not every command at once.
+- Perform `status` discovery and select the **next unfinished** step; never reset to Issue if work already exists.
+- Routine fix with established patterns → `implement` (respect Issue as context), then `pr`.
+- OpenSpec missing and not specifically requested → skip that stage; significant architecture choice still requires `adr`.
+- Significant architecture decision pending → stop affected implementation at Proposed ADR until a human accepts it.
+- Work ready for review → `pr`; confirmed merged → `close` only with authorization.
+- Execute **one** selected stage per invocation, summarize results and the next step. Do not silently chain to merge/deployment.
