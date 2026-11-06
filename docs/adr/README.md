@@ -16,6 +16,6 @@
 
 - [ADR 模板](../../templates/adr-template.md)
 - [ADR 工具比較](../research/adr-skills.md)
-- [ADR 研究 Issue #3](../../issues/3)
+- [ADR 研究 Issue #3](https://github.com/appletiger0704/agent-coding-lifecycle/issues/3)
 
 更新：2026-11-06
