@@ -54,6 +54,49 @@ bash agent-coding-lifecycle/scripts/install.sh /path/to/your-product-repo
 
 若 ADR 核准結果改變技術設計，先回到 OpenSpec 修正 Design / Tasks。沒有重要新決策時，`adr` 只讀既有紀錄，不建立新 ADR。
 
+## v0.2 的 Routing Gate 與實際操作
+
+此版本的主 Skill 先判斷當前命令，再決定哪些工具、文件需要讀取：
+
+- `help`：不進行任何 Repo/CLI 掃描。
+- `status`：只讀調查工作進度。
+- `run`：從現況選擇**下一個未完成階段**；不自動執行所有階段。
+- **Routine fix**：不強制建立 OpenSpec／ADR。
+- **無 OpenSpec**：自動流程跳過；若使用者明確要求 `openspec`，則說明缺少安裝/初始化。
+- **無 ADR 目錄**：不查不存在的檔案；但真正重大新架構決策仍須提出 Proposed ADR。
+- **ADR 核准修改設計**：先回 OpenSpec 更新 Design / Tasks，再實作。
+
+### 唯讀 Preflight
+
+完整安裝之後，於**產品 Repo** 根目錄執行：
+
+```bash
+bash .agents/skills/agent-coding-lifecycle/scripts/preflight.sh .
+```
+
+掃描 Git 分支、變更檔案數、最近 commit、`gh` / `openspec` 可用性、OpenSpec changes，以及可能 Accepted 的 ADR；**不會查遠端 Issue/PR、修改 Repo 或自動讀取全部 ADR**。候選 ADR 需再確認狀態與實際關聯性。
+
+### CLI 與 OpenSpec 的區別
+
+- GitHub CLI（可用且有權限）：`gh issue view 123 --json number,title,state,url`
+- OpenSpec CLI（已安裝並初始化）：`openspec status --change <change-name> --json`
+- Claude Code 的 `/opsx:propose`、`/opsx:apply`、`/opsx:archive` 是 **Agent 聊天指令**，不是 shell 命令；Codex 的具體 Skill 名稱以安裝結果為準。
+
+### 離線 Smoke Test
+
+中央 Repo 內可執行：
+
+```bash
+bash -n skills/agent-coding-lifecycle/scripts/preflight.sh
+bash -n scripts/test-preflight.sh
+bash scripts/test-preflight.sh
+```
+
+**已測：** 無配置的暫存 Git Repo、存在 OpenSpec change、Accepted 與 Superseded ADR 篩選、無 Repo 時正確報錯。  
+**未測：** 真實 Codex／Claude Code 命令是否可被發現、是否遵循路由、是否完成跨 Agent Issue→PR 交接。
+
+此改善由 [Issue #8](https://github.com/appletiger0704/agent-coding-lifecycle/issues/8) 追蹤。
+
 ## 指令範例
 
 ```text
@@ -85,7 +128,7 @@ $agent-coding-lifecycle run 請接續 Issue #123
 
 **案例 C：跨 Agent 接續**
 
-- [ ] Codex 和 Claude Code 均可載入對應指令。
+- [ ] Codex 和 Claude Code 均可載入對應指令（尚待本機驗證）。
 - [ ] 第二個 Agent 能從 Repo 文件判斷下一個未完成階段。
 - [ ] 不會自行核准 ADR、合併或部署。
 
