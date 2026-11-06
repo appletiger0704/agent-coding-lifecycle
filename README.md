@@ -2,6 +2,14 @@
 
 > **Status: Proposal / Research** · 研究 Codex、Claude Code 與可追溯的軟體開發流程。**尚未宣告任何架構已核准。**
 
+## MVP v0.1 — 單一 Orchestrator Skill（已建立，待實測）
+
+- [Skill 原始碼：`skills/agent-coding-lifecycle/SKILL.md`](skills/agent-coding-lifecycle/SKILL.md)
+- [MVP 安裝與手動驗收說明](docs/mvp.md)
+- [Issue #6：MVP 試跑與後續迭代](https://github.com/appletiger0704/agent-coding-lifecycle/issues/6)
+
+**第一階段僅提供一個 Workflow Skill**，協調 GitHub Issue → OpenSpec → ADR Gate → Coding / Tests → PR。Skill 已提交，但**尚未在使用者環境實際安裝或測試**；OpenSpec / ADR Tools / GitHub Actions 也尚未在產品專案中導入。決策需人工核准，合併／部署亦不能由 Agent 擅自執行。
+
 ## 目的
 
 打造能在不同 AI Coding Agents 間交接的工程流程，從需求、規格、架構決策、實作、測試到審查都有版本控制與可回溯證據。此 Repository 是**共用方法、研究與模板的中央知識庫**，不是單一產品的程式碼 Repository。
