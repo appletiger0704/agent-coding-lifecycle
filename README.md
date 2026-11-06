@@ -1,0 +1,67 @@
+# Agent Coding Lifecycle
+
+> **Status: Proposal / Research** · 研究 Codex、Claude Code 與可追溯的軟體開發流程。**尚未宣告任何架構已核准。**
+
+## 目的
+
+打造能在不同 AI Coding Agents 間交接的工程流程，從需求、規格、架構決策、實作、測試到審查都有版本控制與可回溯證據。此 Repository 是**共用方法、研究與模板的中央知識庫**，不是單一產品的程式碼 Repository。
+
+## 最小可行架構（待驗證）
+
+| 元件 | 角色 | 第一階段 |
+|---|---|---|
+| GitHub Issues / PRs | 需求、進度、審查與連結 | 採用 |
+| OpenSpec | Proposal / Specs / Design / Tasks | 評估導入 |
+| ADR（MADR 格式） | 重大架構決策的原因、限制、取捨 | 評估導入 |
+| Documentation and ADRs Skill | 引導 Codex / Claude Code 管理文件及 ADR | 優先評估 |
+| GitHub Projects | 視覺化追蹤 | 視需要啟用 |
+| ADR Tools | ADR CLI 編號和 supersede | 暫緩 |
+| GitHub Actions / Rulesets | 自動驗證、強制審核 | 第二階段 |
+
+## 建議流程
+
+```text
+GitHub Issue
+  → OpenSpec (Proposal / Specs / Design / Tasks)
+  → 檢查既有 Accepted ADR；重大架構變更提出 Proposed ADR
+  → 人工核准（若需要 ADR）
+  → Codex / Claude Code 實作
+  → Pull Request + Tests + Review
+  → Merge + OpenSpec Archive + Issue / Projects 更新
+```
+
+**原則**：AI 可以起草重大架構決策，**不可以自行批准**；一般 bugfix、既有模式內的小修改不需另建 ADR。
+
+## 文件導覽
+
+- [整體開發生命週期與治理邊界](docs/architecture/lifecycle.md)
+- [OpenSpec 研究與導入問題](docs/research/openspec.md)
+- [ADR Skills / MADR / ADR Tools 比較](docs/research/adr-skills.md)
+- [GitHub 整合與分階段導入](docs/research/github-integration.md)
+- [ADR 目錄說明](docs/adr/README.md)
+- [MADR 簡化模板](templates/adr-template.md)
+- [Codex AGENTS.md 範本](templates/AGENTS.md)
+- [Claude Code CLAUDE.md 範本](templates/CLAUDE.md)
+
+## 待辦 Issues
+
+- [#1 總體規劃](../../issues/1)
+- [#2 OpenSpec](../../issues/2)
+- [#3 ADR Skills / MADR / ADR Tools](../../issues/3)
+- [#4 Codex / Claude Code 共用規範](../../issues/4)
+- [#5 GitHub Projects / Actions](../../issues/5)
+
+## 中央與各專案的權責
+
+- **本 Repo**：共用工作流程、研究結果、範本、可複用的 Skills 政策與示例。
+- **每個實際專案 Repo**：其 `openspec/`、真正的 `docs/adr/`、程式碼、CI 設定及 PR 歷程。
+- 不把本 Repo 的研究提案誤用成所有產品都已接受的技術決策。
+
+## 參考資源
+
+- [OpenSpec](https://github.com/Fission-AI/OpenSpec)
+- [Documentation and ADRs Skill](https://github.com/addyosmani/agent-skills/tree/main/skills/documentation-and-adrs)
+- [MADR](https://github.com/adr/madr)
+- [ADR Tools](https://github.com/npryce/adr-tools)
+
+最後更新：2026-11-06
