@@ -29,7 +29,14 @@ if [[ -d openspec ]]; then
   echo 'openspec_directory=present'
   if [[ -d openspec/changes ]]; then
     printf 'openspec_active_changes:\n'
-    find openspec/changes -mindepth 1 -maxdepth 1 -type d ! -name archive -print | sort | head -20
+    change_count=0
+    for change in openspec/changes/*; do
+      if [[ -d "$change" && "${change##*/}" != archive ]]; then
+        change_count=$((change_count+1))
+        if [[ "$change_count" -le 20 ]]; then printf '%s\n' "$change"; fi
+      fi
+    done
+    printf 'openspec_active_change_count=%d\n' "$change_count"
   fi
 else
   echo 'openspec_directory=absent'
@@ -50,12 +57,18 @@ is_accepted() {
 }
 
 adr_dirs=()
+add_adr_dir() {
+  for existing in "${adr_dirs[@]}"; do
+    [[ "$existing" == "$1" ]] && return
+  done
+  adr_dirs+=("$1")
+}
 if [[ -f .adr-dir ]]; then
   configured="$(head -n 1 .adr-dir)"
-  if [[ "$configured" != /* && "$configured" != *".."* && -d "$configured" ]]; then adr_dirs+=("$configured"); fi
+  if [[ "$configured" != /* && "$configured" != *".."* && -d "$configured" ]]; then add_adr_dir "$configured"; fi
 fi
 for candidate in docs/adr doc/adr docs/decisions adr decisions; do
-  if [[ -d "$candidate" ]]; then adr_dirs+=("$candidate"); fi
+  if [[ -d "$candidate" ]]; then add_adr_dir "$candidate"; fi
 done
 if [[ "${#adr_dirs[@]}" -eq 0 ]]; then
   echo 'adr_directories=none'
@@ -68,7 +81,7 @@ else
       count=$((count+1))
       if [[ "$count" -le 20 ]]; then printf '%s\n' "$file"; fi
     fi
-  done < <(find "${adr_dirs[@]}" -type f -name '*.md' -print0 | sort -z -u)
+  done < <(find "${adr_dirs[@]}" -type f -name '*.md' -print0)
   printf 'accepted_adr_count=%d\n' "$count"
 fi
 
