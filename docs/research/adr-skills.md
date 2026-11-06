@@ -1,6 +1,6 @@
 # ADR Skills、MADR、ADR Tools — 比較與研究
 
-> 狀態：Research；關聯 [Issue #3](../../issues/3)、[總體 Issue #1](../../issues/1)。此表是適用性判斷，**不是使用人數排行，也不代表工具已導入**。
+> 狀態：Research；關聯 [Issue #3](https://github.com/appletiger0704/agent-coding-lifecycle/issues/3)、[總體 Issue #1](https://github.com/appletiger0704/agent-coding-lifecycle/issues/1)。此表是適用性判斷，**不是使用人數排行，也不代表工具已導入**。
 
 ## 候選比較
 
