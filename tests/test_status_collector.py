@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-PATH = pathlib.Path(__file__).resolve().parents[1] / 'scripts' / 'status-validator.py'
+PATH = pathlib.Path(__file__).resolve().parents[1] / 'skills' / 'agent-coding-lifecycle' / 'scripts' / 'status-validator.py'
 SPEC = importlib.util.spec_from_file_location('acl_collect', PATH)
 M = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(M)

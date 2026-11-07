@@ -43,7 +43,7 @@ for agent_root in ".agents/skills" ".claude/skills"; do
   copy_one "$source_dir/SKILL.md" "$dest_dir/SKILL.md"
   copy_one "$source_dir/references/commands.md" "$dest_dir/references/commands.md"
   copy_one "$source_dir/scripts/preflight.sh" "$dest_dir/scripts/preflight.sh"
-  copy_one "$source_root/scripts/status-validator.py" "$dest_dir/scripts/status-validator.py"
+  copy_one "$source_dir/scripts/status-validator.py" "$dest_dir/scripts/status-validator.py"
 done
 
 for cmd in help status issue openspec adr implement pr close run; do

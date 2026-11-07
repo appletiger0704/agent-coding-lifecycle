@@ -4,7 +4,7 @@ import pathlib
 import tempfile
 import unittest
 
-SCRIPT = pathlib.Path(__file__).resolve().parents[1] / 'scripts' / 'status-validator.py'
+SCRIPT = pathlib.Path(__file__).resolve().parents[1] / 'skills' / 'agent-coding-lifecycle' / 'scripts' / 'status-validator.py'
 SPEC = importlib.util.spec_from_file_location('lifecycle_status', SCRIPT)
 MODULE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MODULE)
