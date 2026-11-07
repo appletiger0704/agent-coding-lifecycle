@@ -1,5 +1,6 @@
 ---
 description: Review changes and prepare or create a pull request.
+disable-model-invocation: true
 ---
 
 Execute ONLY the `pr` subcommand of **agent-coding-lifecycle** for this user request.

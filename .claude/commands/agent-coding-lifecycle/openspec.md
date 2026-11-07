@@ -1,5 +1,6 @@
 ---
 description: Work with existing OpenSpec project workflows (if installed).
+disable-model-invocation: true
 ---
 
 Execute ONLY the `openspec` subcommand of **agent-coding-lifecycle** for this user request.

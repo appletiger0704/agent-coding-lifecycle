@@ -1,5 +1,6 @@
 ---
 description: Implement the currently approved scoped work and run tests.
+disable-model-invocation: true
 ---
 
 Execute ONLY the `implement` subcommand of **agent-coding-lifecycle** for this user request.

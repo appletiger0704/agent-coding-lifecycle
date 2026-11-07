@@ -1,5 +1,6 @@
 ---
 description: Archive/change issue state after a verified PR merge.
+disable-model-invocation: true
 ---
 
 Execute ONLY the `close` subcommand of **agent-coding-lifecycle** for this user request.

@@ -1,5 +1,6 @@
 ---
 description: Inspect current lifecycle status without changing repository or GitHub.
+disable-model-invocation: true
 ---
 
 Execute ONLY the `status` subcommand of **agent-coding-lifecycle** for this user request.

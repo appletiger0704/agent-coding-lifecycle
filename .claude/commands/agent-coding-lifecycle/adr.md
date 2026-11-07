@@ -1,5 +1,6 @@
 ---
 description: Review existing architectural decisions or propose a new ADR.
+disable-model-invocation: true
 ---
 
 Execute ONLY the `adr` subcommand of **agent-coding-lifecycle** for this user request.

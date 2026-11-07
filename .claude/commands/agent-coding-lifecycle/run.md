@@ -1,5 +1,6 @@
 ---
 description: Resume a lifecycle workflow from the next unfinished step.
+disable-model-invocation: true
 ---
 
 Execute ONLY the `run` subcommand of **agent-coding-lifecycle** for this user request.

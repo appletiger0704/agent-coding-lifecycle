@@ -1,5 +1,6 @@
 ---
 description: Inspect, draft or manage the GitHub Issue for a development task.
+disable-model-invocation: true
 ---
 
 Execute ONLY the `issue` subcommand of **agent-coding-lifecycle** for this user request.

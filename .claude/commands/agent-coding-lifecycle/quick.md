@@ -1,5 +1,6 @@
 ---
 description: Run a small, explicitly requested local task without mandatory Issue or PR.
+disable-model-invocation: true
 ---
 
 Execute only the `quick` subcommand of agent-coding-lifecycle.

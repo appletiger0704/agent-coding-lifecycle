@@ -1,5 +1,6 @@
 ---
 description: Show goals, available lifecycle commands and recommended steps (read-only).
+disable-model-invocation: true
 ---
 
 # Agent Coding Lifecycle — Help
