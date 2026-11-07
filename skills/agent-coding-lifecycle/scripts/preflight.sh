@@ -58,7 +58,7 @@ is_accepted() {
 
 adr_dirs=()
 add_adr_dir() {
-  for existing in "${adr_dirs[@]}"; do
+  for existing in ${adr_dirs[@]+"${adr_dirs[@]}"}; do
     [[ "$existing" == "$1" ]] && return
   done
   adr_dirs+=("$1")
@@ -70,7 +70,7 @@ fi
 for candidate in docs/adr doc/adr docs/decisions adr decisions; do
   if [[ -d "$candidate" ]]; then add_adr_dir "$candidate"; fi
 done
-if [[ "${#adr_dirs[@]}" -eq 0 ]]; then
+if [[ -z "${adr_dirs[*]-}" ]]; then
   echo 'adr_directories=none'
 else
   printf 'adr_directories=%s\n' "${adr_dirs[*]}"

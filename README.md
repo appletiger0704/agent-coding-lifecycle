@@ -1,6 +1,6 @@
 # Agent Coding Lifecycle
 
-> **MVP v0.2：Skill 與指令入口已建立，待 Codex / Claude Code 實機驗證。** 本 Repo 是跨專案的工程流程、研究與模板來源；不是特定產品 Repo，也不代表任何重大架構決策已核准。
+> **v0.4 RC（草稿 PR）：保留單一 Orchestrator Skill，新增 Quick／Tracked、Python 驗證設定、安裝版本檢查；Codex／Claude Code 真實端到端驗證與 PR 強制合併閘門仍待完成。** 本 Repo 是跨專案的工程流程、研究與模板來源；不是特定產品 Repo，也不代表任何重大架構決策已核准。
 
 讓 Codex 與 Claude Code 依據版本化的 GitHub Issue、OpenSpec、ADR、測試與 PR 記錄接續工作，不必依賴對話歷史。
 
@@ -29,8 +29,20 @@ bash agent-coding-lifecycle/scripts/install.sh /path/to/your-product-repo
 - Claude Code：`.claude/skills/agent-coding-lifecycle/`
 - Claude Code 命名空間命令：`.claude/commands/agent-coding-lifecycle/`
 - 唯讀 Preflight：各 Skill 目錄下的 `scripts/preflight.sh`
+- 狀態判定器：各 Skill 目錄下的 `scripts/status-validator.py`（Tracked 需 Python 3 + 已登入的 `gh`）
+- 驗證工具：各 Skill 目錄下的 `scripts/verification-runner.py`（可選 Python Profile，僅以使用者授權執行命令）
+- 版本檔：各 Skill 目錄下的 `VERSION`
 
-腳本預設**不覆寫**已存在檔案；核對差異後可在最後加 `--force`。適用 Bash 環境（macOS、Linux、WSL 或 Git Bash）；安裝後可重新啟動 Agent 讓指令被辨識。以上仍待使用者的實際 Agent 版本驗證。
+腳本預設**不覆寫**已存在檔案。使用 `bash agent-coding-lifecycle/scripts/install.sh /path/to/repo --check` 查看副本差異（唯讀）；需要更新時先審查內容，再使用 `--force`。可用 `--dry-run` 預覽。適用 Bash 環境（macOS、Linux、WSL 或 Git Bash）；安裝後可重新啟動 Agent 讓指令被辨識。以上仍待使用者的實際 Agent 版本驗證。
+
+## 兩種模式
+
+| 模式 | 使用時機 | 必要文件與驗證 |
+|---|---|---|
+| **Quick**（明確呼叫 `quick`） | 一次性腳本、小型本地修正 | 不強制 Issue／PR；仍檢查變更及實際測試；不得自行執行遠端寫入 |
+| **Tracked**（`run` 或指定階段） | 新功能、跨 Session／Codex／Claude 交接、架構決策 | 經核對 Issue + Branch + OpenSpec／ADR（條件式）+ PR + CI 與人工審查 |
+
+Quick 不會繞過必要的資安／架構決策；涉及新 API、資料契約或長期架構選擇時請改用 Tracked。未指定子命令預設顯示 `help`，不擅自選 Issue。
 
 ## 指令總覽
 
@@ -38,6 +50,7 @@ bash agent-coding-lifecycle/scripts/install.sh /path/to/your-product-repo
 |---|---|---|
 | `help` | 查看功能與標準流程 | 第一次使用 |
 | `status` | **唯讀**查看目前進度與阻礙 | 接手或恢復工作 |
+| `quick` | 小型本地變更與測試，不強制 Issue／PR | 一次性 Python 腳本、小型 bugfix |
 | `issue` | 讀取、整理或建立 Issue | 明確定義需求 |
 | `openspec` | 使用專案既有的 OpenSpec 流程 | 撰寫規格／設計 |
 | `adr` | 檢查已核准決策，必要時提出 ADR | 重大架構選擇前 |
@@ -62,10 +75,32 @@ bash agent-coding-lifecycle/scripts/install.sh /path/to/your-product-repo
   status → run（一次只處理下一個未完成階段）
 
 小型 bugfix：
-  issue / 既有任務 → implement → pr → close
+  quick → 本地修改 → 實際測試（不強制 Issue/PR）
+  若專案要求追蹤：issue → implement → pr → close
 ```
 
 **重要區別：** 每次涉及架構的開發應讀取相關 *Accepted ADR*；但**不是每次都要新增 ADR**。`help`、`status`、`run` 是輔助入口，不是必須依序執行的另外三個開發階段。 `run` 不表示已授權自動合併、部署或跳過人工核准。
+
+### Tracked：以證據判斷下一階段
+
+在已安裝 Skill 的產品 Repo 建立並審查 `.agent-lifecycle/issues/123.json`，包含該 Issue 的 `branch` 欄位（[模板](templates/issue-contract.json)），再執行：
+
+```bash
+python3 .agents/skills/agent-coding-lifecycle/scripts/status-validator.py --repo . --issue 123
+```
+
+此唯讀命令查核 Git、GitHub、OpenSpec、ADR 和 CI；`blocked=true` 不得自動推進，也不代表 PR 合併已獲批准。詳見 [v0.3 說明](docs/v0.3-deterministic-state.md)。
+
+### Quick：依專案執行 Python 驗證
+
+可將 [Python uv 範本](templates/verification.python.json) 調整並儲存為產品 Repo 的 `.agent-lifecycle/verification.json`。這些指令僅是範例，需先確認專案確實安裝對應依賴。
+
+```bash
+python3 .agents/skills/agent-coding-lifecycle/scripts/verification-runner.py --repo . --profile .agent-lifecycle/verification.json --list
+python3 .agents/skills/agent-coding-lifecycle/scripts/verification-runner.py --repo . --profile .agent-lifecycle/verification.json --run
+```
+
+使用者必須先檢視並信任 Profile 內容；`--list` 不執行、`--run` 才會執行。沒有設定 Profile 時不會自動安裝工具。
 
 ### 呼叫範例
 
@@ -73,6 +108,7 @@ bash agent-coding-lifecycle/scripts/install.sh /path/to/your-product-repo
 
 ```text
 $agent-coding-lifecycle help
+$agent-coding-lifecycle quick 修正一個本地 Python 腳本
 $agent-coding-lifecycle status
 $agent-coding-lifecycle openspec issue-123
 $agent-coding-lifecycle run 請接續 Issue #123
@@ -82,6 +118,7 @@ $agent-coding-lifecycle run 請接續 Issue #123
 
 ```text
 /agent-coding-lifecycle:help
+/agent-coding-lifecycle:quick 修正一個本地 Python 腳本
 /agent-coding-lifecycle:status
 /agent-coding-lifecycle:openspec issue-123
 /agent-coding-lifecycle:adr 評估是否需要使用 Kafka
@@ -94,13 +131,13 @@ $agent-coding-lifecycle run 請接續 Issue #123
 
 Skill 在進入各階段之前先判斷**使用者要求、既有進度及專案配置**，避免每次完整掃描或建立無用文件。
 
-| 情況 | MVP 行為 |
+| 情況 | v0.4 RC 行為 |
 |---|---|
 | `help` | 直接顯示指令，**不讀 Repo、不呼叫外部工具** |
 | `status` | 唯讀檢查 Git、OpenSpec / ADR 位置，必要時查 Issue / PR |
-| `run` | 僅執行**下一個未完成階段**，不是一口氣跑到合併 |
-| 例行 bugfix、遵循現有設計 | 可略過新 OpenSpec 變更與新 ADR |
-| 沒有 `openspec/` 或未安裝 OpenSpec | 自動流程跳過 OpenSpec；若明確指定 `openspec`，回報安裝前提 |
+| `run` | 需要指定 Issue，依 live validator 執行唯一允許階段，無證據則阻擋 |
+| `quick`、例行 bugfix | 不強制 Issue/PR；不建立不必要的新 OpenSpec/ADR |
+| 沒有 `openspec/` 或未安裝 OpenSpec | Quick／routine 可略過；Tracked feature/architecture 必須回報缺少規格並阻擋 |
 | 沒有 ADR 目錄 | 跳過不存在的既有紀錄；如涉及重大**新**架構選擇，仍須提出 Proposed ADR |
 | 與既有 Accepted ADR 衝突 | 停止受影響的實作，提出取代方案並等待人工核准 |
 
@@ -126,16 +163,16 @@ bash -n scripts/test-preflight.sh
 bash scripts/test-preflight.sh
 ```
 
-目前離線煙霧測試已通過（無 OpenSpec/ADR、存在 Accepted 與 Superseded ADR、缺少 Repo）；**Codex / Claude Code 實機載入與端到端工作流仍待測試**。
+目前包含 Python 離線單元測試、安裝版本測試與環境 smoke tests，GitHub Actions 於 Ubuntu／macOS 驗證；**Codex / Claude Code 實機載入與端到端工作流仍待測試**。
 
-## MVP 範圍與限制
+## v0.4 RC 範圍與限制
 
 此專案目前只有**一個 Orchestrator Skill**，根據子命令按需載入規則，**不會替代** GitHub、OpenSpec 或 ADR 的專門工具。
 
-- 已提供：[`SKILL.md`](skills/agent-coding-lifecycle/SKILL.md)、[各命令規則](skills/agent-coding-lifecycle/references/commands.md)、[9 個 Claude Code 命令](.claude/commands/agent-coding-lifecycle)、[安裝腳本](scripts/install.sh)。
-- 未涵蓋：自動安裝 OpenSpec、ADR Tools、GitHub Projects、強制性的 CI / Branch Rules、MCP、部署自動化。
+- 已提供：[`SKILL.md`](skills/agent-coding-lifecycle/SKILL.md)、[各命令規則](skills/agent-coding-lifecycle/references/commands.md)、[10 個 Claude Code 命令](.claude/commands/agent-coding-lifecycle)、[安裝腳本](scripts/install.sh)。
+- 未涵蓋：自動安裝 OpenSpec、ADR Tools、GitHub Projects、**產品 Repo 強制合併的 CI / Branch Rules**、MCP、部署自動化。本 Repo 有自己測試 Skill 的 Actions，並非產品 Repo 的 Merge Gate。
 - 安全邊界：**重大 ADR 需人員核准**；不得自行核准、合併或部署；沒有執行的測試不得宣稱通過。
-- 技術現況：GitHub 文件、唯讀檢查腳本與命令檔已提交，離線 smoke test 已通過；**仍需在本機 Codex / Claude Code 驗證指令與完整流程**。
+- 技術現況：Skill、雙模式文件、狀態檢查器、可選驗證 Profile、安裝檢查與 CI 測試均已提交候選分支；**仍需在本機 Codex / Claude Code 驗證指令與完整流程**。
 
 詳細說明及手動測試案例請見 [MVP 指南](docs/mvp.md)。
 
@@ -155,4 +192,12 @@ bash scripts/test-preflight.sh
 
 進度：[總體提案 #1](https://github.com/appletiger0704/agent-coding-lifecycle/issues/1) · [MVP #6](https://github.com/appletiger0704/agent-coding-lifecycle/issues/6) · [子命令擴充 #7](https://github.com/appletiger0704/agent-coding-lifecycle/issues/7) · [條件式流程與 Preflight #8](https://github.com/appletiger0704/agent-coding-lifecycle/issues/8)
 
-更新日期：2026-11-06
+更新日期：2026-11-08
+
+
+## v0.4 RC 安裝與交接補充
+
+- 命令 namespace 依 Claude Code 官方文件仍可使用 `.claude/commands/agent-coding-lifecycle/quick.md` → `/agent-coding-lifecycle:quick`，不需為此改 Plugin。
+- Codex／Claude 兩者共用 Skill 主體；Claude 的 `disable-model-invocation: true` 限制自動觸發，此欄位屬 Claude 延伸欄位，不應假定其他 Agent 採用。
+- 跨 Agent 接手先重新執行 Tracked 的 live status；交接文字或 JSON 不等於 GitHub 已驗證狀態。請參考 [交接範本](templates/handoff.example.json) 與 [評估計畫](docs/evaluation-plan.md)。
+- 中央 Repo 的 GitHub Actions 只驗證 Skill 自身，不會自動為任何產品 Repo 設定 Rulesets。

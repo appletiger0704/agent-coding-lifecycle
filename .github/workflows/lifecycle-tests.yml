@@ -1,0 +1,32 @@
+name: lifecycle-tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Python unit tests
+        run: python3 -m unittest discover -s tests -v
+      - name: Bash version
+        run: bash --version | head -n 1
+      - name: Bash syntax
+        run: |
+          bash -n scripts/install.sh
+          bash -n scripts/test-preflight.sh
+          bash -n scripts/test-install.sh
+          bash -n skills/agent-coding-lifecycle/scripts/preflight.sh
+      - name: Existing preflight smoke tests
+        run: bash scripts/test-preflight.sh
+      - name: Installer version/drift tests
+        run: bash scripts/test-install.sh
