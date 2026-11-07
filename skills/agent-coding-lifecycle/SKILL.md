@@ -3,7 +3,7 @@ name: agent-coding-lifecycle
 description: "Use when explicitly invoked to coordinate a GitHub Issue → OpenSpec → ADR → PR workflow or a cross-agent handoff. 中文：接續 Issue、開發生命週期、OpenSpec 規格、ADR 架構決策、交接開發。 Do not auto-trigger for ordinary coding, trivial fixes, or general questions."
 ---
 
-# Agent Coding Lifecycle — MVP Command Router
+# Agent Coding Lifecycle — v0.3 Evidence-Driven Command Router
 
 Coordinate existing tools; do not replace GitHub, OpenSpec, ADR skills, tests, or human reviewers.
 
@@ -20,14 +20,30 @@ Coordinate existing tools; do not replace GitHub, OpenSpec, ADR skills, tests, o
 1. `help`: display purpose, commands, and `issue → openspec → adr → implement → pr → close`. **No repository scan, no tools.**
 2. `status`: discovery only. **No file or remote writes.**
 3. Explicit stage command: execute **only that stage** and its necessary safety checks; do not run all stages.
-4. `run`: inspect progress, then handle **only the next unfinished stage**. Never auto-merge or deploy.
+4. `run`: require a specific Issue number, obtain the **live validator result**, and handle only its allowed next stage. When blocked or unverified, stop; never auto-merge or deploy.
 5. No Git repository: do not claim successful discovery; for `issue`, drafting from supplied text is allowed, but report missing repo access.
 6. Routine fix using established patterns: skip creating OpenSpec changes and ADRs unless user/project policy requires them.
-7. No `openspec/` or OpenSpec tooling: skip the **implicit** OpenSpec step. If `openspec` was explicitly requested, explain setup needed; never pretend it ran.
+7. No `openspec/` or OpenSpec tooling: routine fixes can skip it. For feature/architecture contracts requiring a spec, report the missing prerequisite and stop; never pretend it ran.
 8. No existing ADR directory: skip searching absent ADRs. **Still propose** an ADR when a genuinely significant new architecture decision arises.
 
 **Spec trigger:** new/changed externally observable behavior, API/data contract, or multi-step feature needing acceptance criteria.  
 **ADR trigger:** long-lived architecture, security boundary, data contract, major dependency/infrastructure, multi-component pattern, or hard-to-reverse choice.
+
+## Issue-scoped state validation (v0.3 P0)
+
+For `status` or `run` on Issue #N, get read-only live evidence before stage selection:
+
+```bash
+python3 "<skill-dir>/scripts/status-validator.py" --repo . --issue N
+```
+
+Requires Git checkout, Python 3, authenticated `gh` with access to Issues/PRs/Checks, and a reviewed `.agent-lifecycle/issues/N.json` contract from the central Repo template. Do not invent an Issue ID or classification.
+
+- Trust `stage` / `next_action` / `blocked` only when `source=github_git_live`; `--snapshot` is **not live evidence**.
+- If `blocked=true`, the command fails, or remote status is unknown: report the blocker, **do not advance**. A separately authorized explicit command may address a specific blocker.
+- `run` executes only one validated action; actions requiring a human stop rather than being performed by the Agent.
+- v0.3 only parses ADR document status, **not independent approval provenance**; OpenSpec file presence is not semantic approval either. See [v0.3 contract and limitations](https://github.com/appletiger0704/agent-coding-lifecycle/blob/main/docs/v0.3-deterministic-state.md) in the central repository.
+- Passing CI is not authorization to merge.
 
 ## Deterministic discovery (when needed)
 
@@ -53,4 +69,4 @@ For any non-`help` command, read **only its own heading** in [references/command
 
 ## Handoff
 
-Report concisely: stage, relevant Issue/Spec/ADR/PR, actual test evidence (or not run), blockers, and **one next action**. Omit fields not applicable to the selected command.
+Report concisely: stage, relevant Issue/Spec/ADR/PR, validator source, commit SHA, actual test evidence (or not run), blockers, and **one next action**. Distinguish an informational handoff from live verified status.

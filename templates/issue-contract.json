@@ -1,0 +1,8 @@
+{
+  "issue_number": 123,
+  "type": "feature",
+  "spec_change": "issue-123",
+  "adr_paths": [],
+  "required_checks": ["unit-tests"],
+  "pr_number": null
+}
