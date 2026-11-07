@@ -85,16 +85,16 @@ class PolicyTests(unittest.TestCase):
         self.assert_decision(f, 'pr', 'prepare_pull_request')
 
     def test_pr_closed_without_merge(self):
-        f = facts(); f['pull_request'] = {'number': 4, 'state': 'CLOSED', 'merged_at': None, 'head_ref': 'feat/issue-123'}
+        f = facts(); f['pull_request'] = {'number': 4, 'state': 'CLOSED', 'merged_at': None, 'head_ref': 'feat/issue-123', 'head_sha': 'sha-b'}
         self.assert_decision(f, 'unknown', 'inspect_pr', True)
 
     def test_pr_needs_required_checks(self):
-        f = facts(); f['pull_request'] = {'number': 4, 'state': 'OPEN', 'merged_at': None, 'head_ref': 'feat/issue-123'}
+        f = facts(); f['pull_request'] = {'number': 4, 'state': 'OPEN', 'merged_at': None, 'head_ref': 'feat/issue-123', 'head_sha': 'sha-b'}
         f['validation']['required_checks'] = []
         self.assert_decision(f, 'validation', 'configure_required_checks', True)
 
     def test_pr_ci_unavailable(self):
-        f = facts(); f['pull_request'] = {'number': 4, 'state': 'OPEN', 'merged_at': None, 'head_ref': 'feat/issue-123'}
+        f = facts(); f['pull_request'] = {'number': 4, 'state': 'OPEN', 'merged_at': None, 'head_ref': 'feat/issue-123', 'head_sha': 'sha-b'}
         f['validation']['verified'] = False
         self.assert_decision(f, 'validation', 'verify_ci_checks', True)
 
@@ -102,12 +102,12 @@ class PolicyTests(unittest.TestCase):
         for case in ([], [{'name': 'unit-tests', 'conclusion': 'failure', 'status': 'completed'}],
                      [{'name': 'unit-tests', 'conclusion': 'success', 'status': 'in_progress'}]):
             with self.subTest(checks=case):
-                f = facts(); f['pull_request'] = {'number': 4, 'state': 'OPEN', 'merged_at': None, 'head_ref': 'feat/issue-123'}
+                f = facts(); f['pull_request'] = {'number': 4, 'state': 'OPEN', 'merged_at': None, 'head_ref': 'feat/issue-123', 'head_sha': 'sha-b'}
                 f['validation']['checks'] = case
                 self.assert_decision(f, 'validation', 'fix_or_run_tests', True)
 
     def test_pr_green_requires_human_review(self):
-        f = facts(); f['pull_request'] = {'number': 4, 'state': 'OPEN', 'merged_at': None, 'head_ref': 'feat/issue-123'}
+        f = facts(); f['pull_request'] = {'number': 4, 'state': 'OPEN', 'merged_at': None, 'head_ref': 'feat/issue-123', 'head_sha': 'sha-b'}
         self.assert_decision(f, 'review', 'await_human_review', True)
 
     def test_stale_branch(self):

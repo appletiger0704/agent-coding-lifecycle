@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "profile": "python-uv",
+  "checks": [
+    {
+      "name": "pytest",
+      "argv": [
+        "uv",
+        "run",
+        "pytest",
+        "-q"
+      ],
+      "enabled": true,
+      "timeout_seconds": 600
+    },
+    {
+      "name": "ruff-lint",
+      "argv": [
+        "uv",
+        "run",
+        "ruff",
+        "check",
+        "."
+      ],
+      "enabled": true,
+      "timeout_seconds": 300
+    },
+    {
+      "name": "ruff-format",
+      "argv": [
+        "uv",
+        "run",
+        "ruff",
+        "format",
+        "--check",
+        "."
+      ],
+      "enabled": true,
+      "timeout_seconds": 300
+    },
+    {
+      "name": "mypy",
+      "argv": [
+        "uv",
+        "run",
+        "mypy",
+        "src/"
+      ],
+      "enabled": false,
+      "timeout_seconds": 300
+    }
+  ]
+}

@@ -24,6 +24,9 @@ jobs:
         run: |
           bash -n scripts/install.sh
           bash -n scripts/test-preflight.sh
+          bash -n scripts/test-install.sh
           bash -n skills/agent-coding-lifecycle/scripts/preflight.sh
       - name: Existing preflight smoke tests
         run: bash scripts/test-preflight.sh
+      - name: Installer version/drift tests
+        run: bash scripts/test-install.sh

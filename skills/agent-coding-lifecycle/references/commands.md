@@ -2,6 +2,13 @@
 
 This file supplements `SKILL.md`. Use the routing gate first. Replace example identifiers with validated ones. **Never paste chat slash commands into a shell.**
 
+## quick
+
+- Only run for an **explicit** request for a small, reversible, local change. No Issue ID required; do not silently create Issue/PR, initialize OpenSpec, or add ADR.
+- Before edits, check requested scope and existing file changes. Existing architecture/security/contract policy still applies. If new externally observable contract, cross-component architecture, security or durable multi-session handoff is involved, **stop** and recommend Tracked mode with a specific reason.
+- Use the target Repo's documented verification commands or optional reviewed `.agent-lifecycle/verification.json` with `verification-runner.py`. First `--list` to inspect, then `--run` when appropriate. Do not treat missing tools or skipped checks as passing.
+- Keep changes scoped. Report files modified, tests actually run, failing/not-run checks, blockers and next action. No automatic remote writes, approval, merge, deploy or side effects outside explicit authorization.
+
 ## status
 
 - For a **specified Issue #N**, run `python3 "<skill-dir>/scripts/status-validator.py" --repo . --issue N` before selecting any stage. This is read-only.
@@ -44,7 +51,7 @@ This file supplements `SKILL.md`. Use the routing gate first. Replace example id
 - On a known Issue, run the live validator first. Missing required Spec, Proposed ADR, wrong linkage or unverifiable state must be addressed, not ignored.
 - No implementation of an architecture-sensitive Proposed ADR before human approval.
 - Review the worktree before edits: `git status --short` and `git diff --check`. Respect existing uncommitted changes.
-- Implement only the requested scope. Run the target Repo's real documented tests; record commands, passes, failures, and **not-run** checks. Never invent a test command.
+- Implement only the requested scope. Run the target Repo's documented tests. If a reviewed `.agent-lifecycle/verification.json` exists, call `verification-runner.py --list` before `--run` and report passed/failed/not-run. Never invent tests or assume dependencies are installed.
 - If a significant new technical choice arises, route back to `adr`; after approval, revise OpenSpec if needed.
 
 ## pr
@@ -53,6 +60,7 @@ This file supplements `SKILL.md`. Use the routing gate first. Replace example id
 - Verify Issue/PR linkage with the validator. A draft PR may precede CI; CI must be verified on that PR head SHA afterward. Never report unrun tests as passed.
 - If `gh` exists and an existing PR may exist, inspect via `gh pr status` or `gh pr view --json number,state,url`.
 - Prepare the PR with Issue, OpenSpec change (if any), Accepted / Proposed ADR state, change summary, tests run/not run, risks, and remaining work.
+- GitHub checks must correspond to the PR's current SHA; passing checks do not replace explicit human approval or GitHub Rulesets. Include actual verification results, not self-approval.
 - Only create a remote PR if the user authorized it and tooling is available. Never self-approve, merge or deploy.
 
 ## close

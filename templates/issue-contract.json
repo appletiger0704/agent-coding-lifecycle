@@ -3,6 +3,9 @@
   "type": "feature",
   "spec_change": "issue-123",
   "adr_paths": [],
-  "required_checks": ["unit-tests"],
-  "pr_number": null
+  "required_checks": [
+    "unit-tests"
+  ],
+  "pr_number": null,
+  "branch": "feat/issue-123"
 }

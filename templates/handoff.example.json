@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "mode": "tracked",
+  "issue_number": 123,
+  "source": "handoff_unverified",
+  "repository": "owner/product-repo",
+  "branch": "feat/issue-123",
+  "commit_sha": "<actual-commit-sha-from-git>",
+  "stage": "implementation",
+  "next_action": "run_tests",
+  "spec_change": "issue-123",
+  "adr_paths": [],
+  "pull_request_url": null,
+  "checks": [
+    {
+      "name": "pytest",
+      "status": "not_run",
+      "command": [
+        "uv",
+        "run",
+        "pytest",
+        "-q"
+      ]
+    }
+  ],
+  "blockers": [],
+  "notes": "Re-run the live status validator and verify all links before continuing."
+}
