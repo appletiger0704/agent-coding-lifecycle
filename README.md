@@ -75,7 +75,8 @@ Quick 不會繞過必要的資安／架構決策；涉及新 API、資料契約�
   status → run（一次只處理下一個未完成階段）
 
 小型 bugfix：
-  issue / 既有任務 → implement → pr → close
+  quick → 本地修改 → 實際測試（不強制 Issue/PR）
+  若專案要求追蹤：issue → implement → pr → close
 ```
 
 **重要區別：** 每次涉及架構的開發應讀取相關 *Accepted ADR*；但**不是每次都要新增 ADR**。`help`、`status`、`run` 是輔助入口，不是必須依序執行的另外三個開發階段。 `run` 不表示已授權自動合併、部署或跳過人工核准。
@@ -130,13 +131,13 @@ $agent-coding-lifecycle run 請接續 Issue #123
 
 Skill 在進入各階段之前先判斷**使用者要求、既有進度及專案配置**，避免每次完整掃描或建立無用文件。
 
-| 情況 | MVP 行為 |
+| 情況 | v0.4 RC 行為 |
 |---|---|
 | `help` | 直接顯示指令，**不讀 Repo、不呼叫外部工具** |
 | `status` | 唯讀檢查 Git、OpenSpec / ADR 位置，必要時查 Issue / PR |
-| `run` | 僅執行**下一個未完成階段**，不是一口氣跑到合併 |
-| 例行 bugfix、遵循現有設計 | 可略過新 OpenSpec 變更與新 ADR |
-| 沒有 `openspec/` 或未安裝 OpenSpec | 自動流程跳過 OpenSpec；若明確指定 `openspec`，回報安裝前提 |
+| `run` | 需要指定 Issue，依 live validator 執行唯一允許階段，無證據則阻擋 |
+| `quick`、例行 bugfix | 不強制 Issue/PR；不建立不必要的新 OpenSpec/ADR |
+| 沒有 `openspec/` 或未安裝 OpenSpec | Quick／routine 可略過；Tracked feature/architecture 必須回報缺少規格並阻擋 |
 | 沒有 ADR 目錄 | 跳過不存在的既有紀錄；如涉及重大**新**架構選擇，仍須提出 Proposed ADR |
 | 與既有 Accepted ADR 衝突 | 停止受影響的實作，提出取代方案並等待人工核准 |
 
@@ -162,16 +163,16 @@ bash -n scripts/test-preflight.sh
 bash scripts/test-preflight.sh
 ```
 
-目前離線煙霧測試已通過（無 OpenSpec/ADR、存在 Accepted 與 Superseded ADR、缺少 Repo）；**Codex / Claude Code 實機載入與端到端工作流仍待測試**。
+目前包含 Python 離線單元測試、安裝版本測試與環境 smoke tests，GitHub Actions 於 Ubuntu／macOS 驗證；**Codex / Claude Code 實機載入與端到端工作流仍待測試**。
 
-## MVP 範圍與限制
+## v0.4 RC 範圍與限制
 
 此專案目前只有**一個 Orchestrator Skill**，根據子命令按需載入規則，**不會替代** GitHub、OpenSpec 或 ADR 的專門工具。
 
-- 已提供：[`SKILL.md`](skills/agent-coding-lifecycle/SKILL.md)、[各命令規則](skills/agent-coding-lifecycle/references/commands.md)、[9 個 Claude Code 命令](.claude/commands/agent-coding-lifecycle)、[安裝腳本](scripts/install.sh)。
-- 未涵蓋：自動安裝 OpenSpec、ADR Tools、GitHub Projects、強制性的 CI / Branch Rules、MCP、部署自動化。
+- 已提供：[`SKILL.md`](skills/agent-coding-lifecycle/SKILL.md)、[各命令規則](skills/agent-coding-lifecycle/references/commands.md)、[10 個 Claude Code 命令](.claude/commands/agent-coding-lifecycle)、[安裝腳本](scripts/install.sh)。
+- 未涵蓋：自動安裝 OpenSpec、ADR Tools、GitHub Projects、**產品 Repo 強制合併的 CI / Branch Rules**、MCP、部署自動化。本 Repo 有自己測試 Skill 的 Actions，並非產品 Repo 的 Merge Gate。
 - 安全邊界：**重大 ADR 需人員核准**；不得自行核准、合併或部署；沒有執行的測試不得宣稱通過。
-- 技術現況：GitHub 文件、唯讀檢查腳本與命令檔已提交，離線 smoke test 已通過；**仍需在本機 Codex / Claude Code 驗證指令與完整流程**。
+- 技術現況：Skill、雙模式文件、狀態檢查器、可選驗證 Profile、安裝檢查與 CI 測試均已提交候選分支；**仍需在本機 Codex / Claude Code 驗證指令與完整流程**。
 
 詳細說明及手動測試案例請見 [MVP 指南](docs/mvp.md)。
 
@@ -192,6 +193,7 @@ bash scripts/test-preflight.sh
 進度：[總體提案 #1](https://github.com/appletiger0704/agent-coding-lifecycle/issues/1) · [MVP #6](https://github.com/appletiger0704/agent-coding-lifecycle/issues/6) · [子命令擴充 #7](https://github.com/appletiger0704/agent-coding-lifecycle/issues/7) · [條件式流程與 Preflight #8](https://github.com/appletiger0704/agent-coding-lifecycle/issues/8)
 
 更新日期：2026-11-08
+
 
 ## v0.4 RC 安裝與交接補充
 

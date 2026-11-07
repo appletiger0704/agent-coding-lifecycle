@@ -242,6 +242,11 @@ def derive(facts):
         if item.get("status") != "ACCEPTED":
             return result("adr", "await_human_adr_approval", True,
                           f"adr_not_accepted:{item.get('path', '?')}:{item.get('status', 'UNKNOWN')}")
+    # A document claiming Accepted is NOT proof of an authorized human approval.
+    # Until P1 verifies approval provenance, architecture transitions cannot auto-advance.
+    if kind == "architecture":
+        return result("adr", "verify_human_adr_approval", True,
+                      "human_adr_approval_provenance_unverified")
     if pr.get("number"):
         if pr.get("state") != "OPEN":
             return result("unknown", "inspect_pr", True, "pr_not_open_or_merged")

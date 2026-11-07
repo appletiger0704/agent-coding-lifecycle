@@ -33,6 +33,7 @@ class CollectorTests(unittest.TestCase):
         if args[:3] == ['gh', 'repo', 'view'] and '--json' in args and 'nameWithOwner' in args:
             return 'example/repo'
         if args[:3] == ['gh', 'repo', 'view'] and 'defaultBranchRef' in args:
+            assert args[3] == 'example/repo', args
             return 'main'
         if args[:3] == ['git', 'rev-parse', 'main']:
             return 'a' * 40

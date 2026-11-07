@@ -69,6 +69,10 @@ class PolicyTests(unittest.TestCase):
                 f = facts('architecture'); f['adr']['items'][0]['status'] = s
                 self.assert_decision(f, 'adr', 'await_human_adr_approval', True)
 
+    def test_accepted_architecture_requires_independent_approval(self):
+        f = facts('architecture')
+        self.assert_decision(f, 'adr', 'verify_human_adr_approval', True)
+
     def test_implementation_empty(self):
         self.assert_decision(facts(), 'implement', 'implement_change')
 
