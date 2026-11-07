@@ -10,11 +10,16 @@ permissions:
 
 jobs:
   tests:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - name: Python unit tests
         run: python3 -m unittest discover -s tests -v
+      - name: Bash version
+        run: bash --version | head -n 1
       - name: Bash syntax
         run: |
           bash -n scripts/install.sh

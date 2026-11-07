@@ -61,6 +61,16 @@ def collect(repo, issue_number):
     full_name = run(["gh", "repo", "view", "--json", "nameWithOwner", "--jq", ".nameWithOwner"], repo)
     if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", full_name):
         raise EvidenceError("invalid_repository_identity")
+    default_branch = run(["gh", "repo", "view", "-R", full_name, "--json", "defaultBranchRef", "--jq", ".defaultBranchRef.name"], repo)
+    if not re.fullmatch(r"[A-Za-z0-9._/-]{1,100}", default_branch):
+        raise EvidenceError("invalid_default_branch")
+    # Compare local base with live GitHub; a cached local default branch is not fresh evidence.
+    remote_base = json_command(["gh", "api", f"repos/{full_name}/git/ref/heads/{default_branch}"], repo)
+    remote_base_sha = (remote_base.get("object") or {}).get("sha")
+    local_base_sha = run(["git", "rev-parse", default_branch], repo)
+    if not remote_base_sha or not re.fullmatch(r"[0-9a-fA-F]{40}", remote_base_sha):
+        raise EvidenceError("default_branch_sha_unverified")
+
     issue = json_command(["gh", "issue", "view", str(issue_number), "-R", full_name,
                           "--json", "number,state,title,url"], repo)
     if issue.get("number") != issue_number:
@@ -75,16 +85,25 @@ def collect(repo, issue_number):
             raise EvidenceError("invalid_issue_contract") from exc
         if contract.get("issue_number") != issue_number or contract.get("type") not in ("routine", "feature", "architecture"):
             raise EvidenceError("invalid_contract_identity_or_type")
+        expected_branch = contract.get("branch")
+        if expected_branch is not None and (
+            not isinstance(expected_branch, str)
+            or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._/-]{0,99}", expected_branch)
+            or ".." in expected_branch
+        ):
+            raise EvidenceError("invalid_contract_branch")
 
     branch = run(["git", "branch", "--show-current"], repo)
     head = run(["git", "rev-parse", "HEAD"], repo)
     dirty = bool(run(["git", "status", "--porcelain=v1"], repo))
-    ahead = 0 if branch == "main" else None
-    if branch and branch != "main":
-        try:
-            ahead = int(run(["git", "rev-list", "--count", "main..HEAD"], repo))
-        except (EvidenceError, ValueError):
-            ahead = None
+    if not branch:
+        raise EvidenceError("detached_head")
+    # Both values are computed against the GitHub-selected default branch name.
+    try:
+        ahead = int(run(["git", "rev-list", "--count", f"{default_branch}..HEAD"], repo))
+        behind = int(run(["git", "rev-list", "--count", f"HEAD..{default_branch}"], repo))
+    except (EvidenceError, ValueError):
+        ahead, behind = None, None
 
     prs = json_command(["gh", "pr", "list", "-R", full_name, "--state", "all", "--limit", "100",
                         "--json", "number,state,mergedAt,headRefName,headRefOid,closingIssuesReferences,url"], repo)
@@ -106,6 +125,8 @@ def collect(repo, issue_number):
         linked = [pr for pr in linked if pr["number"] == expected_pr]
     elif len(linked) > 1:
         raise EvidenceError("ambiguous_linked_pull_requests")
+    if len(prs) >= 100 and not linked:
+        raise EvidenceError("pr_listing_incomplete")
     pr = linked[0] if linked else None
 
     kind = contract["type"] if contract else None
@@ -133,16 +154,19 @@ def collect(repo, issue_number):
             try:
                 response = json_command(["gh", "api", f"repos/{full_name}/commits/{check_sha}/check-runs?per_page=100"], repo)
                 checks = response.get("check_runs", [])
-                checks_verified = True
+                checks_verified = isinstance(checks, list) and response.get("total_count", len(checks)) <= len(checks)
             except EvidenceError:
                 pass
     return {
         "source": "github_git_live", "repository": full_name,
         "issue": {"number": issue_number, "state": issue.get("state"), "verified": True, "url": issue.get("url")},
-        "contract": {"exists": contract is not None, "type": kind},
+        "contract": {"exists": contract is not None, "type": kind,
+                     "branch": contract.get("branch") if contract else None},
         "spec": {"id": spec_change, "ready": spec_exists},
         "adr": {"items": adr_records},
-        "implementation": {"branch": branch, "head_sha": head, "ahead": ahead, "dirty": dirty},
+        "implementation": {"branch": branch, "head_sha": head, "ahead": ahead,
+                           "behind": behind, "default_branch": default_branch,
+                           "base_synced": local_base_sha == remote_base_sha, "dirty": dirty},
         "pull_request": {"number": pr.get("number"), "state": pr.get("state"), "merged_at": pr.get("mergedAt"),
                          "head_sha": pr.get("headRefOid"), "head_ref": pr.get("headRefName"), "url": pr.get("url")} if pr else None,
         "validation": {"required_checks": required_checks, "verified": checks_verified,
@@ -165,7 +189,7 @@ def derive(facts):
         reasons = blockers.copy()
         if reason:
             reasons.extend(reason if isinstance(reason, list) else [reason])
-        return {"schema_version": "0.3", "issue_number": issue.get("number"),
+        return {"schema_version": "0.3.1", "issue_number": issue.get("number"),
                 "stage": stage, "next_action": action, "blocked": blocked or bool(reasons),
                 "blockers": reasons, "source": facts.get("source"),
                 "evidence": {"repository": facts.get("repository"), "issue_url": issue.get("url"),
@@ -182,8 +206,28 @@ def derive(facts):
     kind = contract.get("type")
     if kind not in ("routine", "feature", "architecture"):
         return result("issue", "define_issue_contract", True, "invalid_classification")
-    if issue.get("state") == "CLOSED" and not (facts.get("pull_request") or {}).get("merged_at"):
+    pr = facts.get("pull_request") or {}
+    if issue.get("state") == "CLOSED" and not pr.get("merged_at"):
         return result("unknown", "resolve_closed_issue", True, "issue_closed_without_verified_merge")
+    if pr.get("merged_at"):
+        return result("close", "verify_and_close")
+    implementation = facts.get("implementation") or {}
+    if not implementation.get("base_synced", False):
+        return result("unknown", "sync_default_branch", True, "local_default_branch_not_current")
+    if implementation.get("behind") is None or implementation.get("ahead") is None:
+        return result("unknown", "verify_branch_history", True, "branch_history_unknown")
+    if implementation.get("behind", 0) > 0:
+        return result("unknown", "sync_branch", True, "branch_behind_default")
+    if implementation.get("dirty"):
+        return result("implementation", "review_uncommitted_changes", True, "dirty_worktree")
+    expected_branch = contract.get("branch")
+    current_branch = implementation.get("branch")
+    if not expected_branch:
+        return result("issue", "assign_issue_branch", True, "missing_issue_branch")
+    if current_branch != expected_branch:
+        return result("unknown", "checkout_issue_branch", True, "branch_issue_mismatch")
+    if pr.get("number") and pr.get("head_ref") != expected_branch:
+        return result("unknown", "inspect_pr", True, "pr_branch_issue_mismatch")
     spec = facts.get("spec") or {}
     if kind in ("feature", "architecture"):
         if not spec.get("id"):
@@ -198,10 +242,6 @@ def derive(facts):
         if item.get("status") != "ACCEPTED":
             return result("adr", "await_human_adr_approval", True,
                           f"adr_not_accepted:{item.get('path', '?')}:{item.get('status', 'UNKNOWN')}")
-    implementation = facts.get("implementation") or {}
-    pr = facts.get("pull_request") or {}
-    if pr.get("merged_at"):
-        return result("close", "verify_and_close")
     if pr.get("number"):
         if pr.get("state") != "OPEN":
             return result("unknown", "inspect_pr", True, "pr_not_open_or_merged")
@@ -218,10 +258,6 @@ def derive(facts):
         if missing:
             return result("validation", "fix_or_run_tests", True, ["check_not_passed:" + c for c in missing])
         return result("review", "await_human_review", True, "human_review_required")
-    if implementation.get("dirty"):
-        return result("implementation", "review_uncommitted_changes", True, "dirty_worktree")
-    if implementation.get("ahead") is None:
-        return result("implementation", "verify_branch_history", True, "branch_history_unknown")
     if implementation["ahead"] == 0:
         return result("implement", "implement_change")
     return result("pr", "prepare_pull_request")
@@ -244,7 +280,7 @@ def main():
             facts["source"] = "fixture"
         decision = derive(facts)
     except (EvidenceError, OSError, UnicodeError, json.JSONDecodeError) as exc:
-        decision = {"schema_version": "0.3", "stage": "unknown", "next_action": "verify_evidence",
+        decision = {"schema_version": "0.3.1", "stage": "unknown", "next_action": "verify_evidence",
                     "blocked": True, "blockers": [str(exc)], "source": "live_error"}
     print(json.dumps(decision, indent=2, ensure_ascii=False))
     return 0 if not decision["blocked"] else 2

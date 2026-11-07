@@ -44,4 +44,8 @@ if bash "$preflight" "$tmp/missing" >/dev/null 2>&1; then
   echo 'FAIL: missing repository was accepted' >&2
   exit 1
 fi
+# Exercise the empty-array branch on macOS's system Bash 3.2 as well.
+out="$(bash "$preflight" "$tmp/repo")"
+grep -q '^accepted_adr_count=2
+ <<<"$out"
 echo 'preflight smoke tests passed'

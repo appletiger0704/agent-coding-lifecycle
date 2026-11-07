@@ -1,5 +1,6 @@
 ---
 name: agent-coding-lifecycle
+disable-model-invocation: true
 description: "Use when explicitly invoked to coordinate a GitHub Issue → OpenSpec → ADR → PR workflow or a cross-agent handoff. 中文：接續 Issue、開發生命週期、OpenSpec 規格、ADR 架構決策、交接開發。 Do not auto-trigger for ordinary coding, trivial fixes, or general questions."
 ---
 

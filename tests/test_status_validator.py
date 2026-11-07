@@ -14,10 +14,10 @@ def facts(kind='routine'):
     return {
         'source': 'github_git_live',
         'issue': {'number': 123, 'state': 'OPEN', 'verified': True},
-        'contract': {'exists': True, 'type': kind},
+        'contract': {'exists': True, 'type': kind, 'branch': 'feat/issue-123'},
         'spec': {'id': 'issue-123', 'ready': True},
         'adr': {'items': [{'path': 'docs/adr/001.md', 'status': 'ACCEPTED'}]} if kind == 'architecture' else {'items': []},
-        'implementation': {'branch': 'feat/issue-123', 'head_sha': 'sha-b', 'ahead': 0, 'dirty': False},
+        'implementation': {'branch': 'feat/issue-123', 'head_sha': 'sha-b', 'ahead': 0, 'behind': 0, 'dirty': False, 'base_synced': True},
         'pull_request': None,
         'validation': {'required_checks': ['unit-tests'], 'verified': True,
                        'checks': [{'name': 'unit-tests', 'conclusion': 'success', 'status': 'completed'}]},
@@ -78,23 +78,23 @@ class PolicyTests(unittest.TestCase):
 
     def test_branch_history_missing(self):
         f = facts(); f['implementation']['ahead'] = None
-        self.assert_decision(f, 'implementation', 'verify_branch_history', True)
+        self.assert_decision(f, 'unknown', 'verify_branch_history', True)
 
     def test_ready_pr(self):
         f = facts(); f['implementation']['ahead'] = 3
         self.assert_decision(f, 'pr', 'prepare_pull_request')
 
     def test_pr_closed_without_merge(self):
-        f = facts(); f['pull_request'] = {'number': 4, 'state': 'CLOSED', 'merged_at': None}
+        f = facts(); f['pull_request'] = {'number': 4, 'state': 'CLOSED', 'merged_at': None, 'head_ref': 'feat/issue-123'}
         self.assert_decision(f, 'unknown', 'inspect_pr', True)
 
     def test_pr_needs_required_checks(self):
-        f = facts(); f['pull_request'] = {'number': 4, 'state': 'OPEN', 'merged_at': None}
+        f = facts(); f['pull_request'] = {'number': 4, 'state': 'OPEN', 'merged_at': None, 'head_ref': 'feat/issue-123'}
         f['validation']['required_checks'] = []
         self.assert_decision(f, 'validation', 'configure_required_checks', True)
 
     def test_pr_ci_unavailable(self):
-        f = facts(); f['pull_request'] = {'number': 4, 'state': 'OPEN', 'merged_at': None}
+        f = facts(); f['pull_request'] = {'number': 4, 'state': 'OPEN', 'merged_at': None, 'head_ref': 'feat/issue-123'}
         f['validation']['verified'] = False
         self.assert_decision(f, 'validation', 'verify_ci_checks', True)
 
@@ -102,12 +102,12 @@ class PolicyTests(unittest.TestCase):
         for case in ([], [{'name': 'unit-tests', 'conclusion': 'failure', 'status': 'completed'}],
                      [{'name': 'unit-tests', 'conclusion': 'success', 'status': 'in_progress'}]):
             with self.subTest(checks=case):
-                f = facts(); f['pull_request'] = {'number': 4, 'state': 'OPEN', 'merged_at': None}
+                f = facts(); f['pull_request'] = {'number': 4, 'state': 'OPEN', 'merged_at': None, 'head_ref': 'feat/issue-123'}
                 f['validation']['checks'] = case
                 self.assert_decision(f, 'validation', 'fix_or_run_tests', True)
 
     def test_pr_green_requires_human_review(self):
-        f = facts(); f['pull_request'] = {'number': 4, 'state': 'OPEN', 'merged_at': None}
+        f = facts(); f['pull_request'] = {'number': 4, 'state': 'OPEN', 'merged_at': None, 'head_ref': 'feat/issue-123'}
         self.assert_decision(f, 'review', 'await_human_review', True)
 
     def test_stale_branch(self):
@@ -129,6 +129,26 @@ class PolicyTests(unittest.TestCase):
                 path.write_text(contents)
                 self.assertEqual(MODULE.adr_status(path), expected)
 
+
+    def test_base_branch_stale(self):
+        f = facts(); f['implementation']['base_synced'] = False
+        self.assert_decision(f, 'unknown', 'sync_default_branch', True)
+
+    def test_behind_base(self):
+        f = facts(); f['implementation']['behind'] = 2
+        self.assert_decision(f, 'unknown', 'sync_branch', True)
+
+    def test_missing_branch_binding(self):
+        f = facts(); f['contract']['branch'] = None
+        self.assert_decision(f, 'issue', 'assign_issue_branch', True)
+
+    def test_mismatched_branch(self):
+        f = facts(); f['contract']['branch'] = 'feat/different'
+        self.assert_decision(f, 'unknown', 'checkout_issue_branch', True)
+
+    def test_mismatched_pr_branch(self):
+        f = facts(); f['pull_request'] = {'number': 4, 'state': 'OPEN', 'merged_at': None, 'head_ref': 'feat/different'}
+        self.assert_decision(f, 'unknown', 'inspect_pr', True)
 
 if __name__ == '__main__':
     unittest.main()
