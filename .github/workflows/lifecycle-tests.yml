@@ -1,0 +1,24 @@
+name: lifecycle-tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Python unit tests
+        run: python3 -m unittest discover -s tests -v
+      - name: Bash syntax
+        run: |
+          bash -n scripts/install.sh
+          bash -n scripts/test-preflight.sh
+          bash -n skills/agent-coding-lifecycle/scripts/preflight.sh
+      - name: Existing preflight smoke tests
+        run: bash scripts/test-preflight.sh

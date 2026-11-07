@@ -1,6 +1,6 @@
 # Agent Coding Lifecycle
 
-> **MVP v0.2：Skill 與指令入口已建立，待 Codex / Claude Code 實機驗證。** 本 Repo 是跨專案的工程流程、研究與模板來源；不是特定產品 Repo，也不代表任何重大架構決策已核准。
+> **v0.3 P0 候選：新增 Issue-scoped 狀態判定及測試；Codex / Claude Code 實機驗證、強制 CI 合併閘門與 ADR 人工核准證據查核仍待完成。** 本 Repo 是跨專案的工程流程、研究與模板來源；不是特定產品 Repo，也不代表任何重大架構決策已核准。
 
 讓 Codex 與 Claude Code 依據版本化的 GitHub Issue、OpenSpec、ADR、測試與 PR 記錄接續工作，不必依賴對話歷史。
 
@@ -29,6 +29,7 @@ bash agent-coding-lifecycle/scripts/install.sh /path/to/your-product-repo
 - Claude Code：`.claude/skills/agent-coding-lifecycle/`
 - Claude Code 命名空間命令：`.claude/commands/agent-coding-lifecycle/`
 - 唯讀 Preflight：各 Skill 目錄下的 `scripts/preflight.sh`
+- 狀態判定器：各 Skill 目錄下的 `scripts/status-validator.py`（須 Python 3 + 已登入的 `gh`）
 
 腳本預設**不覆寫**已存在檔案；核對差異後可在最後加 `--force`。適用 Bash 環境（macOS、Linux、WSL 或 Git Bash）；安裝後可重新啟動 Agent 讓指令被辨識。以上仍待使用者的實際 Agent 版本驗證。
 
@@ -66,6 +67,16 @@ bash agent-coding-lifecycle/scripts/install.sh /path/to/your-product-repo
 ```
 
 **重要區別：** 每次涉及架構的開發應讀取相關 *Accepted ADR*；但**不是每次都要新增 ADR**。`help`、`status`、`run` 是輔助入口，不是必須依序執行的另外三個開發階段。 `run` 不表示已授權自動合併、部署或跳過人工核准。
+
+### v0.3：以證據判斷下一階段
+
+在已安裝 Skill 的產品 Repo 建立並審查 `.agent-lifecycle/issues/123.json`（[模板](templates/issue-contract.json)），再執行：
+
+```bash
+python3 .agents/skills/agent-coding-lifecycle/scripts/status-validator.py --repo . --issue 123
+```
+
+此唯讀命令查核 Git、GitHub、OpenSpec、ADR 和 CI；`blocked=true` 不得自動推進，也不代表 PR 合併已獲批准。詳見 [v0.3 說明](docs/v0.3-deterministic-state.md)。
 
 ### 呼叫範例
 
@@ -155,4 +166,4 @@ bash scripts/test-preflight.sh
 
 進度：[總體提案 #1](https://github.com/appletiger0704/agent-coding-lifecycle/issues/1) · [MVP #6](https://github.com/appletiger0704/agent-coding-lifecycle/issues/6) · [子命令擴充 #7](https://github.com/appletiger0704/agent-coding-lifecycle/issues/7) · [條件式流程與 Preflight #8](https://github.com/appletiger0704/agent-coding-lifecycle/issues/8)
 
-更新日期：2026-11-06
+更新日期：2026-11-07
