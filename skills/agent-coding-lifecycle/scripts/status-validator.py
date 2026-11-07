@@ -61,7 +61,7 @@ def collect(repo, issue_number):
     full_name = run(["gh", "repo", "view", "--json", "nameWithOwner", "--jq", ".nameWithOwner"], repo)
     if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", full_name):
         raise EvidenceError("invalid_repository_identity")
-    default_branch = run(["gh", "repo", "view", "-R", full_name, "--json", "defaultBranchRef", "--jq", ".defaultBranchRef.name"], repo)
+    default_branch = run(["gh", "repo", "view", full_name, "--json", "defaultBranchRef", "--jq", ".defaultBranchRef.name"], repo)
     if not re.fullmatch(r"[A-Za-z0-9._/-]{1,100}", default_branch):
         raise EvidenceError("invalid_default_branch")
     # Compare local base with live GitHub; a cached local default branch is not fresh evidence.
